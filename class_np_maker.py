@@ -87,14 +87,14 @@ class np_maker():
         assert len(path2_x)==self.max_length 
         assert len(path2_y)==self.max_length
 
-    def create_np_array(self):
+    def create_np_path(self):
 
         list_all_init_path = []
         list_all_opt_path = []
+        print("Converting path data to numpy........ ")
+        for i,examplary_pathing_msg in enumerate(tqdm(self.pathing_msgs)):
 
-        for i,examplary_pathing_msg in enumerate(tqdm(self.pathing_msgs[0:3])):
-
-            print("examplary_pathing_msg")
+            #print("examplary_pathing_msg")
 
             '''
             for init_path in examplary_pathing_msg.path_options[0].reference_path:
@@ -138,10 +138,84 @@ class np_maker():
 
         return np_all_initp,np_all_optp
 
+    def create_np_grid(self):
+
+        list_all_grid_data =[]
+        print("Converting grid data to numpy........ ")
+        for i,examplary_pathing_msg in enumerate(tqdm(self.pathing_msgs)):
+
+            #get sequences aligning with pathing messages
+            grid_seq = examplary_pathing_msg.path_options[1].reference_path[0].left_boundaries.lane
+
+            """
+            grid is saved as vector in grid_msg.data
+            grid_msg.info gives information about properties, i.e. width, height, resolution, position in odometry frame
+            """
+            grid_idx = grid_seqs.index(grid_seq)
+            grid_msg = grid_msgs[grid_idx]
+
+            grid_data = np.asarray(grid_msg.data)
+            grid_data = grid_data.reshape(grid_msg.info.width, grid_msg.info.height)
+            
+            # append grid data
+            list_all_grid_data.append(grid_data) 
+
+        #converted appended grids to np array
+        np_all_grid_data = np.asarray(list_all_grid_data)
+
+        return np_all_grid_data
+
+    def create_np_img(self):
+    
+
+class np_maker_grid():
+    def __init__(self,pathing_msgs,max_length):
+        self.pathing_msgs = pathing_msgs
+        self.max_length = max_length
+        self.extract_msg_cnt = 220
+
+    def create_np_grid(self):
+        list_all_grid_data =[]
+        for i,examplary_pathing_msg in enumerate(tqdm(self.pathing_msgs[0:3])):
+
+            #get sequences aligning with pathing messages
+            grid_seq = examplary_pathing_msg.path_options[1].reference_path[0].left_boundaries.lane
+
+            """
+            grid is saved as vector in grid_msg.data
+            grid_msg.info gives information about properties, i.e. width, height, resolution, position in odometry frame
+            """
+            grid_idx = grid_seqs.index(grid_seq)
+            grid_msg = grid_msgs[grid_idx]
+
+            grid_data = np.asarray(grid_msg.data)
+            grid_data = grid_data.reshape(grid_msg.info.width, grid_msg.info.height)
+            
+            # append grid data
+            list_all_grid_data.append(grid_data) 
+
+        #converted appended grids to np array
+        np_all_grid_data = np.asarray(list_all_grid_data)
+
+        return np_all_grid_data
+
+
+
+# functionality check
 convert_2_np = np_maker(pathing_msgs,_MAX_LENGTH)
 
-np_init_path,np_opt_path = convert_2_np.create_np_array()
+np_init_path,np_opt_path = convert_2_np.create_np_path()
+
+np_grid_data = convert_2_np.create_np_grid()
 
 print((np_init_path[0]))
 print(np.shape(np_opt_path))
+
+print(np.shape(np_grid_data))
+
+from matplotlib import pyplot as plt
+#plt.matshow(np_grid_data[0])
+
+plt.plot(np_init_path[0,:15,0],np_init_path[0,:15,1])
+plt.show()
 
