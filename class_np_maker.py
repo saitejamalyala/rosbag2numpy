@@ -166,40 +166,21 @@ class np_maker():
         return np_all_grid_data
 
     def create_np_img(self):
-    
+        list_all_img_data =[]
+        print("Converting grid data to numpy........ ")
+        for i,examplary_pathing_msg in enumerate(tqdm(self.pathing_msgs[0:2])):
 
-class np_maker_grid():
-    def __init__(self,pathing_msgs,max_length):
-        self.pathing_msgs = pathing_msgs
-        self.max_length = max_length
-        self.extract_msg_cnt = 220
+            image_seq = examplary_pathing_msg.path_options[1].reference_path[0].left_boundaries.road
+            image_idx = image_seqs.index(image_seq)
+            image_msg = image_msgs[image_idx]
+            # Convert compressed image to RAW
+            bridge = CvBridge()
+            img = bridge.compressed_imgmsg_to_cv2(image_msg)
+            list_all_img_data.append(img)
 
-    def create_np_grid(self):
-        list_all_grid_data =[]
-        for i,examplary_pathing_msg in enumerate(tqdm(self.pathing_msgs[0:3])):
+        np_all_img_data = np.asarray(list_all_img_data)
 
-            #get sequences aligning with pathing messages
-            grid_seq = examplary_pathing_msg.path_options[1].reference_path[0].left_boundaries.lane
-
-            """
-            grid is saved as vector in grid_msg.data
-            grid_msg.info gives information about properties, i.e. width, height, resolution, position in odometry frame
-            """
-            grid_idx = grid_seqs.index(grid_seq)
-            grid_msg = grid_msgs[grid_idx]
-
-            grid_data = np.asarray(grid_msg.data)
-            grid_data = grid_data.reshape(grid_msg.info.width, grid_msg.info.height)
-            
-            # append grid data
-            list_all_grid_data.append(grid_data) 
-
-        #converted appended grids to np array
-        np_all_grid_data = np.asarray(list_all_grid_data)
-
-        return np_all_grid_data
-
-
+        return np_all_img_data
 
 # functionality check
 convert_2_np = np_maker(pathing_msgs,_MAX_LENGTH)
@@ -208,10 +189,15 @@ np_init_path,np_opt_path = convert_2_np.create_np_path()
 
 np_grid_data = convert_2_np.create_np_grid()
 
+np_image_data = convert_2_np.create_np_img()
+
+
 print((np_init_path[0]))
 print(np.shape(np_opt_path))
 
 print(np.shape(np_grid_data))
+
+print(np.shape(np_image_data))
 
 from matplotlib import pyplot as plt
 #plt.matshow(np_grid_data[0])
