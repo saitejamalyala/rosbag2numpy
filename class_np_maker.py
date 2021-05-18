@@ -120,7 +120,16 @@ class np_maker():
                 if len(opt_path_x)<self.max_length:
                     opt_path_x.extend(self.__padd_values(self.max_length-len(opt_path_x),0))
                     opt_path_y.extend(self.__padd_values(self.max_length-len(opt_path_y),0))
+                        
+            else:                    
+                if len(init_path_x)<self.max_length:
+                    init_path_x.extend(self.__padd_values(self.max_length-len(init_path_x),init_path_x[-1]))
+                    #init_path_x = self.__padded_path(self,init_path_x)
+                    init_path_y.extend(self.__padd_values(self.max_length-len(init_path_y),init_path_y[-1]))
             
+                if len(opt_path_x)<self.max_length:
+                    opt_path_x.extend(self.__padd_values(self.max_length-len(opt_path_x),opt_path_x[-1]))
+                    opt_path_y.extend(self.__padd_values(self.max_length-len(opt_path_y),opt_path_y[-1]))
             #check for length
             self.__assert_all_lengths(self,init_path_x,init_path_y,opt_path_x,opt_path_y)
 
