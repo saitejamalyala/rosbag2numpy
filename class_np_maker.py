@@ -177,15 +177,17 @@ class np_maker():
     def create_np_img(self):
         list_all_img_data =[]
         print("Converting grid data to numpy........ ")
-        for i,examplary_pathing_msg in enumerate(tqdm(self.pathing_msgs[0:2])):
+        for i,examplary_pathing_msg in enumerate(tqdm(self.pathing_msgs)):
 
             image_seq = examplary_pathing_msg.path_options[1].reference_path[0].left_boundaries.road
             image_idx = image_seqs.index(image_seq)
             image_msg = image_msgs[image_idx]
-            # Convert compressed image to RAW
-            bridge = CvBridge()
-            img = bridge.compressed_imgmsg_to_cv2(image_msg)
-            list_all_img_data.append(img)
+
+            # Convert compressed image(byte string) to RAW using
+            img = Image.open(io.BytesIO(image_msg.data))
+            #convert PIL image object to numpy array
+            np_img = np.asarray(img)
+            list_all_img_data.append(np_img)
 
         np_all_img_data = np.asarray(list_all_img_data)
 
