@@ -1,5 +1,6 @@
 import rosbag
-from cv_bridge import CvBridge, CvBridgeError
+#from cv_bridge import CvBridge, CvBridgeError
+import PIL.Image as Image 
 import numpy as np
 from numpy import save
 from numpy import load
@@ -96,19 +97,8 @@ class np_maker():
 
             #print("examplary_pathing_msg")
 
-            '''
-            for init_path in examplary_pathing_msg.path_options[0].reference_path:
-                #tup_init_xy.append((init_path.point.x,init_path.point.y))
-                init_path_x.append(init_path.point.x)
-                init_path_y.append(init_path.point.y)
-            '''
             init_path_x,init_path_y = self.__construct_path(examplary_pathing_msg.path_options[0].reference_path)
 
-            '''
-            for opt_path in examplary_pathing_msg.path_options[2].reference_path:
-                opt_path_x.append(opt_path.point.x)
-                opt_path_y.append(opt_path.point.y)
-            '''
             opt_path_x,opt_path_y = self.__construct_path(examplary_pathing_msg.path_options[2].reference_path)
 
             if _ZERO_PADDING:
@@ -130,6 +120,7 @@ class np_maker():
                 if len(opt_path_x)<self.max_length:
                     opt_path_x.extend(self.__padd_values(self.max_length-len(opt_path_x),opt_path_x[-1]))
                     opt_path_y.extend(self.__padd_values(self.max_length-len(opt_path_y),opt_path_y[-1]))
+
             #check for length
             self.__assert_all_lengths(self,init_path_x,init_path_y,opt_path_x,opt_path_y)
 
@@ -176,7 +167,7 @@ class np_maker():
 
     def create_np_img(self):
         list_all_img_data =[]
-        print("Converting grid data to numpy........ ")
+        print("Converting image data to numpy........ ")
         for i,examplary_pathing_msg in enumerate(tqdm(self.pathing_msgs)):
 
             image_seq = examplary_pathing_msg.path_options[1].reference_path[0].left_boundaries.road
@@ -192,6 +183,22 @@ class np_maker():
         np_all_img_data = np.asarray(list_all_img_data)
 
         return np_all_img_data
+
+    def create_np_odo(self):
+        list_all_odo_data = []
+        print("Converting Odometer data to numpy........ ")
+        for examplary_pathing_msg in enumerate(tqdm(self.pathing_msgs)):
+
+            odom_seq = examplary_pathing_msg.path_options[1].reference_path[0].left_boundaries.obstacle
+            odom_idx = odom_seqs.index(odom_seq)
+            odom_msg = odom_msgs[odom_idx]
+
+            #adding only position (x,y), check odo_msg for other data(heading, angle and others) thats available
+            list_all_odo_data.append((odom_msg.pos_x,odom_msg.pos_y))
+        
+        np_all_odo_data = np.asfarray(list_all_odo_data)
+
+        return np_all_odo_data
 
 # functionality check
 convert_2_np = np_maker(pathing_msgs,_MAX_LENGTH)
