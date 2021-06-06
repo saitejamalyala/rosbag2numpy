@@ -7,7 +7,7 @@ from numpy import load
 from tqdm import tqdm
 import sys
 from typing import List,Any
-
+import io
 sys.path.insert(0, '~/ddad/application/urban/remote_services/teleop_machine_learning/src/training')
 
 _READ_ROSBAG =1
