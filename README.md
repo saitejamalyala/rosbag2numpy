@@ -1,2 +1,5 @@
 # rosbag2numpy
-Convert rosbag data set to seperate numpy 
+Convert data in rosbag format to numpy.
+Specific to ros message structure in rosbag.
+
+The repository works for the following 
