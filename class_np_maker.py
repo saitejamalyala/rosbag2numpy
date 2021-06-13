@@ -12,7 +12,7 @@ sys.path.insert(
 )
 
 
-class np_maker:
+class np_maker():
     """
     Description of np_maker
 

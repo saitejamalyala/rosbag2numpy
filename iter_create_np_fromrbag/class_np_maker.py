@@ -7,12 +7,13 @@ import sys
 import io
 from typing import Dict, List, Any, Optional, Tuple
 
+'''
 sys.path.insert(
     0, "~/ddad/application/urban/remote_services/teleop_machine_learning/src/training"
-)
+)'''
 
 
-class np_maker:
+class np_maker():
     """
     Description of np_maker
 
