@@ -10,7 +10,7 @@ import numpy as np
 import asyncio
 
 # Logging setup
-logging.basicConfig(filename="iter_bag2np.log", filemode="a", level=logging.INFO)
+logging.basicConfig(filename=r".\iter_bag2np.log", filemode="a", level=logging.INFO)
 logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.INFO)
 ch = logging.StreamHandler()
@@ -127,9 +127,10 @@ async def save_np(bag_path):
                 folder_name,
                 np_file_name + f"_nos{no_samples}" + "_grid",
             ),
-            grid_data=np_grid_data,
+            grid_data = np_grid_data,
             grid_org_res = np_all_grid_orig_res,
         )
+
         np.savez_compressed(
             os.path.join(
                 target_path,
@@ -139,6 +140,7 @@ async def save_np(bag_path):
             ),
             init_path=np_init_path,
         )
+
         np.savez_compressed(
             os.path.join(
                 target_path,
@@ -154,7 +156,7 @@ async def save_np(bag_path):
                 target_path,
                 scenario_name,
                 folder_name,
-                np_file_name + f"_nos{no_samples}" + "_lr_bnd_paths",
+                np_file_name + f"_nos{no_samples}" + "_lr_bnd",
             ),
             left_bnd=np_bnd_path[:,0,:,:],
             right_bnd = np_bnd_path[:,1,:,:],
@@ -179,6 +181,7 @@ async def save_np(bag_path):
             ),
             odo_data=np_odo_data,
             )
+
         logger.info(f"Saved Files of {np_file_name} from folder {folder_name}")
         time.sleep(0.1)
 
@@ -188,7 +191,7 @@ async def save_np(bag_path):
 
 async def main():
 
-    for i in range(len(all_bag_paths[0:1])):
+    for i in range(len(all_bag_paths)):
         await save_np(all_bag_paths[i])
 
 
