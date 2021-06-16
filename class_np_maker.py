@@ -12,7 +12,7 @@ sys.path.insert(
 )
 
 
-class np_maker():
+class np_maker:
     """
     Description of np_maker
 
@@ -62,16 +62,16 @@ class np_maker():
         self._ZERO_PADDING = ZERO_PADDING
 
     @staticmethod
-    def __np_reshape_frm_list(list_path,new_shape):
-        return np.reshape((np.asarray(list_path)),new_shape)
-    
+    def __np_reshape_frm_list(list_path, new_shape):
+        return np.reshape((np.asarray(list_path)), new_shape)
+
     @staticmethod
-    def __np_hstack_list(self,list1,list2,new_shape):
-        assert len(list1)==len(list2)
-        np_list1 = self.__np_reshape_frm_list(list1,new_shape)
-        np_list2 = self.__np_reshape_frm_list(list2,new_shape)
-        return np.hstack((np_list1,np_list2))
-   
+    def __np_hstack_list(self, list1, list2, new_shape):
+        assert len(list1) == len(list2)
+        np_list1 = self.__np_reshape_frm_list(list1, new_shape)
+        np_list2 = self.__np_reshape_frm_list(list2, new_shape)
+        return np.hstack((np_list1, np_list2))
+
     @staticmethod
     def __padd_values(n: int, val: float) -> List[float]:
         listofvalues = [val] * n
@@ -190,9 +190,11 @@ class np_maker():
 
             # pair x and y ordinates to make it a co-ordinate
             np_init_path = self.__np_hstack_list(
-                self, init_path_x, init_path_y, new_shape=(self.max_length, 1))
+                self, init_path_x, init_path_y, new_shape=(self.max_length, 1)
+            )
             np_opt_path = self.__np_hstack_list(
-                self, opt_path_x, opt_path_y, new_shape=(self.max_length, 1))
+                self, opt_path_x, opt_path_y, new_shape=(self.max_length, 1)
+            )
 
             # append paths from all pathing messages
             list_all_init_path.append(np_init_path)

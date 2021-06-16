@@ -7,13 +7,13 @@ import sys
 import io
 from typing import Dict, List, Any, Optional, Tuple
 
-'''
+"""
 sys.path.insert(
     0, "~/ddad/application/urban/remote_services/teleop_machine_learning/src/training"
-)'''
+)"""
 
 
-class np_maker():
+class np_maker:
     """
     Description of np_maker
 
@@ -63,16 +63,16 @@ class np_maker():
         self._ZERO_PADDING = ZERO_PADDING
 
     @staticmethod
-    def __np_reshape_frm_list(list_path,new_shape):
-        return np.reshape((np.asarray(list_path)),new_shape)
-    
+    def __np_reshape_frm_list(list_path, new_shape):
+        return np.reshape((np.asarray(list_path)), new_shape)
+
     @staticmethod
-    def __np_hstack_list(self,list1,list2,new_shape):
-        assert len(list1)==len(list2)
-        np_list1 = self.__np_reshape_frm_list(list1,new_shape)
-        np_list2 = self.__np_reshape_frm_list(list2,new_shape)
-        return np.hstack((np_list1,np_list2))
-   
+    def __np_hstack_list(self, list1, list2, new_shape):
+        assert len(list1) == len(list2)
+        np_list1 = self.__np_reshape_frm_list(list1, new_shape)
+        np_list2 = self.__np_reshape_frm_list(list2, new_shape)
+        return np.hstack((np_list1, np_list2))
+
     @staticmethod
     def __padd_values(n: int, val: float) -> List[float]:
         listofvalues = [val] * n
@@ -104,6 +104,42 @@ class np_maker():
         return path_x, path_y
 
     @staticmethod
+    def __construct_bnd_lane(list_of_points):
+
+        l_bnd_x, l_bnd_y, r_bnd_x, r_bnd_y = ([] for i in range(4))
+
+        for path in list_of_points:
+
+            l_bnd_x.append(path.left_boundaries.lane * -1)
+            l_bnd_y.append(path.right_boundaries.lane * -1)
+
+            r_bnd_x.append(path.left_boundaries.road)
+            r_bnd_y.append(path.right_boundaries.road)
+            # print(bnd_x,bnd_y)
+        return l_bnd_x, l_bnd_y, r_bnd_x, r_bnd_y
+
+    def __padd_bnd_lanes(self, left_bnd_x, left_bnd_y, right_bnd_x, right_bnd_y):
+        if (
+            (len(left_bnd_x) < self.max_length)
+            & (len(left_bnd_y) < self.max_length)
+            & (len(right_bnd_x) < self.max_length)
+            & (len(right_bnd_y) < self.max_length)
+        ):
+            left_bnd_x.extend(
+                self.__padd_values(self.max_length - len(left_bnd_x), left_bnd_x[-1])
+            )
+            left_bnd_y.extend(
+                self.__padd_values(self.max_length - len(left_bnd_y), left_bnd_y[-1])
+            )
+            right_bnd_x.extend(
+                self.__padd_values(self.max_length - len(right_bnd_x), right_bnd_x[-1])
+            )
+            right_bnd_y.extend(
+                self.__padd_values(self.max_length - len(right_bnd_y), right_bnd_y[-1])
+            )
+        return left_bnd_x, left_bnd_y, right_bnd_x, right_bnd_y
+
+    @staticmethod
     def __assert_all_lengths(
         self, path1_x: List, path1_y: List, path2_x: List, path2_y: List
     ):
@@ -122,6 +158,7 @@ class np_maker():
 
         list_all_init_path = []
         list_all_opt_path = []
+        list_all_bnd = []
         print("Converting path data to numpy........ ")
 
         # Enumerate through pathing messages and construct paths
@@ -134,6 +171,15 @@ class np_maker():
             )
 
             opt_path_x, opt_path_y = self.__construct_path(
+                examplary_pathing_msg.path_options[2].reference_path
+            )
+
+            (
+                left_bnd_x,
+                left_bnd_y,
+                right_bnd_x,
+                right_bnd_y,
+            ) = self.__construct_bnd_lane(
                 examplary_pathing_msg.path_options[2].reference_path
             )
 
@@ -184,6 +230,12 @@ class np_maker():
                         )
                     )
 
+                
+            # pad  left and right boundaries to fixed length
+            left_bnd_x, left_bnd_y, right_bnd_x, right_bnd_y = self.__padd_bnd_lanes(
+                left_bnd_x, left_bnd_y, right_bnd_x, right_bnd_y
+            )
+
             # check for lengths
             self.__assert_all_lengths(
                 self, init_path_x, init_path_y, opt_path_x, opt_path_y
@@ -191,19 +243,25 @@ class np_maker():
 
             # pair x and y ordinates to make it a co-ordinate
             np_init_path = self.__np_hstack_list(
-                self, init_path_x, init_path_y, new_shape=(self.max_length, 1))
+                self, init_path_x, init_path_y, new_shape=(self.max_length, 1)
+            )
             np_opt_path = self.__np_hstack_list(
-                self, opt_path_x, opt_path_y, new_shape=(self.max_length, 1))
+                self, opt_path_x, opt_path_y, new_shape=(self.max_length, 1)
+            )
+            np_left_bnd = self.__np_hstack_list(
+                self,left_bnd_x,left_bnd_y,new_shape=(self.max_length,1))
+            np_right_bnd = self.__np_hstack_list(
+                self,right_bnd_x,right_bnd_y,new_shape=(self.max_length,1))
 
             # append paths from all pathing messages
             list_all_init_path.append(np_init_path)
             list_all_opt_path.append(np_opt_path)
-
+            list_all_bnd.append((np_left_bnd,np_right_bnd))
         # Convert the all paths appended list to numpy array
         np_all_initp = np.asarray(list_all_init_path)
         np_all_optp = np.asarray(list_all_opt_path)
-
-        return np_all_initp, np_all_optp
+        np_all_bndp = np.asarray(list_all_bnd)
+        return np_all_initp, np_all_optp, np_all_bndp
 
     def create_np_grid(self) -> ndarray:
         """To create ndarray version of grid data
@@ -212,6 +270,7 @@ class np_maker():
             ndarray: ndarray of grid data(shape:1526*1526*1)
         """
         list_all_grid_data = []
+        list_origin_res = []
         print("Converting grid data to numpy........ ")
         for i, examplary_pathing_msg in enumerate(tqdm(self.pathing_msgs)):
 
@@ -232,13 +291,20 @@ class np_maker():
             grid_data = np.asarray(grid_msg.data)
             grid_data = grid_data.reshape(grid_msg.info.width, grid_msg.info.height)
 
-            # append grid data
+            # New inputs
+            grid_origin_x = grid_msg.info.origin.position.x
+            grid_origin_y = grid_msg.info.origin.position.y
+            grid_resolution = grid_msg.info.resolution
+
+            # append grid data and (origin,resolution) to their respective lists
             list_all_grid_data.append(grid_data)
+            list_origin_res.append((grid_origin_x, grid_origin_y, grid_resolution))
 
         # converted appended grids to np array
         np_all_grid_data = np.asarray(list_all_grid_data)
+        np_all_grid_orig_res = np.asarray(list_origin_res)
 
-        return np_all_grid_data
+        return np_all_grid_data, np_all_grid_orig_res
 
     def create_np_img(self) -> ndarray:
         """To create ndarray version of image data(all images)
@@ -276,7 +342,7 @@ class np_maker():
         """
         list_all_odo_data = []
         print("Converting Odometer data to numpy........ ")
-        for examplary_pathing_msg in enumerate(tqdm(self.pathing_msgs)):
+        for i,examplary_pathing_msg in enumerate(tqdm(self.pathing_msgs)):
 
             odom_seq = (
                 examplary_pathing_msg.path_options[1]
@@ -286,8 +352,8 @@ class np_maker():
             odom_idx = self.odom_seqs.index(odom_seq)
             odom_msg = self.odom_msgs[odom_idx]
 
-            # adding only position (x,y), check odo_msg for other data(heading, angle and others) thats available
-            list_all_odo_data.append((odom_msg.pos_x, odom_msg.pos_y))
+            # adding only position (x,y, heading), check odo_msg for other data(heading, angle and others) thats available
+            list_all_odo_data.append((odom_msg.pos_x, odom_msg.pos_y, odom_msg.heading))
 
         np_all_odo_data = np.asfarray(list_all_odo_data)
 

@@ -13,7 +13,7 @@ class Read_Ros_Bag:
 
         """
         self.path = path
-        self.bag_name = os.path.split(self.path)[-1].split('.')[0]
+        self.bag_name = os.path.split(self.path)[-1].split(".")[0]
         try:
             self.bag = bagreader(self.path).reader
         except:
