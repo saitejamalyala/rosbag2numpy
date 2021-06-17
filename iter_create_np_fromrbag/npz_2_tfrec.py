@@ -12,7 +12,7 @@ from tqdm import trange
 print(tf.__version__)
 
 # Logging setup
-logging.basicConfig(filename=r".\nzp2tfrec.log", filemode="a", level=logging.INFO)
+logging.basicConfig(filename="nzp2tfrec.log", filemode="a", level=logging.INFO)
 logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.INFO)
 ch = logging.StreamHandler()
@@ -21,8 +21,10 @@ formatter = logging.Formatter("%(levelname)s- %(message)s")
 ch.setFormatter(formatter)
 logger.addHandler(ch)
 
+# Class 
 class Tfrecs_frm_npz():
-
+    """[summary]
+    """
     def __init__(self, source_path, target_path, samples_per_record:int=16) -> None:
         self.source_path = source_path
         self.target_path = target_path
@@ -31,6 +33,15 @@ class Tfrecs_frm_npz():
 
     @staticmethod
     def __get_all_paths(root:str, pattern:str)->List[str]:
+        """[summary]
+
+        Args:
+            root (str): [description]
+            pattern (str): [description]
+
+        Returns:
+            List[str]: [description]
+        """        
         list_file_paths=[]
         for path, subdirs, files in os.walk(root):
             for file_name in files:
@@ -40,7 +51,11 @@ class Tfrecs_frm_npz():
         return sorted(list_file_paths)
 
     def __get_all_msg_paths(self)->Tuple[List[str]]:
+        """[summary]
 
+        Returns:
+            Tuple[List[str]]: [description]
+        """
         grid_paths = self.__get_all_paths(self.source_path,pattern="*_grid.npz")
         init_paths = self.__get_all_paths(self.source_path,pattern="*_init_path.npz")
         opt_paths = self.__get_all_paths(self.source_path,pattern="*_opt_path.npz")
@@ -56,13 +71,31 @@ class Tfrecs_frm_npz():
 
     @staticmethod
     def __load_npz(file_path:str,array_name:str,data_type=np.float32, normalize_factor:float=1.0):
+        """[summary]
 
+        Args:
+            file_path (str): [description]
+            array_name (str): [description]
+            data_type ([type], optional): [description]. Defaults to np.float32.
+            normalize_factor (float, optional): [description]. Defaults to 1.0.
+
+        Returns:
+            [type]: [description]
+        """
         npz_array =  np.load(file_path)[array_name]
         npz_array = (npz_array/normalize_factor).astype(data_type)
         return npz_array
     
     @staticmethod
     def __get_names(path:str)->Tuple[str,str,str,str]:
+        """[summary]
+
+        Args:
+            path (str): [description]
+
+        Returns:
+            Tuple[str,str,str,str]: [description]
+        """        
         list_split_path=path.split(os.sep)
         scene_name = list_split_path[-3]
         folder_name = list_split_path[-2]
@@ -73,16 +106,37 @@ class Tfrecs_frm_npz():
 
     @staticmethod
     def __assert_lengths(in1,in2,in3,in4,in5,in6,in7):
-            try:
-                assert (
-                len(in1)==len(in2)==len(in3)==len(in3)==len(in4)==len(in5)==len(in6)==len(in7)
-                )
-            except AssertionError:
-                print(f"Assertion error, all inputs and outputs are not of equal length")
+        """[summary]
+
+        Args:
+            in1 ([type]): [description]
+            in2 ([type]): [description]
+            in3 ([type]): [description]
+            in4 ([type]): [description]
+            in5 ([type]): [description]
+            in6 ([type]): [description]
+            in7 ([type]): [description]
+        """        
+        try:
+            assert (
+            len(in1)==len(in2)==len(in3)==len(in3)==len(in4)==len(in5)==len(in6)==len(in7)
+            )
+        except AssertionError:
+            print(f"Assertion error, all inputs and outputs are not of equal length")
 
     @staticmethod
     def __create_example(grid_map, grid_org_res, left_bnd, right_bnd, car_odo, init_path, opt_path):
+        """[summary]
 
+        Args:
+            grid_map ([type]): [description]
+            grid_org_res ([type]): [description]
+            left_bnd ([type]): [description]
+            right_bnd ([type]): [description]
+            car_odo ([type]): [description]
+            init_path ([type]): [description]
+            opt_path ([type]): [description]
+        """
         def gridmap_feature(value):
             """Returns a bytes_list from a string / byte."""
             return tf.train.Feature(
@@ -108,7 +162,11 @@ class Tfrecs_frm_npz():
 
     
     def __write_records(self,grid_path,**file_data):
+        """[summary]
 
+        Args:
+            grid_path ([type]): [description]
+        """
 
         grid_map = file_data.get("in_grid_map")
         grid_org_res = file_data.get("in_grid_org_res")
@@ -150,7 +208,8 @@ class Tfrecs_frm_npz():
                     writer.write(example.SerializeToString())
 
     def create_records(self):
-
+        """[summary]
+        """
         all_grid_paths,all_init_paths,all_opt_paths,all_lr_bnd_paths,all_odo_paths = self.__get_all_msg_paths()
 
         #logger.info(len(all_grid_paths),len(all_init_paths),len(all_opt_paths),len(all_lr_bnd_paths),len(all_odo_paths))

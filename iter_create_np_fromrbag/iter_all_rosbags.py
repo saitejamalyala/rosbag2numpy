@@ -10,7 +10,7 @@ import numpy as np
 import asyncio
 
 # Logging setup
-logging.basicConfig(filename=r".\iter_bag2np.log", filemode="a", level=logging.INFO)
+logging.basicConfig(filename="iter_bag2np.log", filemode="a", level=logging.INFO)
 logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.INFO)
 ch = logging.StreamHandler()
