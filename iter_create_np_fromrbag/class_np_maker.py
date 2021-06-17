@@ -297,7 +297,7 @@ class np_maker():
             grid_resolution = grid_msg.info.resolution
 
             # append grid data and (origin,resolution) to their respective lists
-            list_all_grid_data.append(grid_data)
+            list_all_grid_data.append(grid_data) 
             list_origin_res.append((grid_origin_x, grid_origin_y, grid_resolution))
 
         # converted appended grids to np array
