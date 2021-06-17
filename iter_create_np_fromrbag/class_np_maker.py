@@ -13,7 +13,7 @@ sys.path.insert(
 )"""
 
 
-class np_maker:
+class np_maker():
     """
     Description of np_maker
 
@@ -149,7 +149,7 @@ class np_maker:
         assert len(path2_x) == self.max_length
         assert len(path2_y) == self.max_length
 
-    def create_np_path(self) -> Tuple[ndarray, ndarray]:
+    def create_np_path(self) -> Tuple[ndarray, ndarray, ndarray]:
         """To create ndarray version of initial path and optimal path data
 
         Returns:
@@ -263,7 +263,7 @@ class np_maker:
         np_all_bndp = np.asarray(list_all_bnd)
         return np_all_initp, np_all_optp, np_all_bndp
 
-    def create_np_grid(self) -> ndarray:
+    def create_np_grid(self) -> Tuple[ndarray,ndarray]:
         """To create ndarray version of grid data
 
         Returns:
