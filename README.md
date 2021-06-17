@@ -2,4 +2,5 @@
 Convert data in rosbag format to numpy.
 Specific to ros message structure in rosbag.
 
-The repository works for the following 
+The repository works for the following ros message structure
+
