@@ -9,6 +9,14 @@ import logging
 import numpy as np
 import asyncio
 
+
+# path details- rosbags base bath, target path , max length of initial path
+root_path = r"D:\teja"
+file_pattern = "*.bag"
+target_path = r"D:\test"
+_MAX_LENGTH = 25
+
+
 # Logging setup
 logging.basicConfig(filename="iter_bag2np.log", filemode="a", level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -18,12 +26,6 @@ ch.setLevel(logging.INFO)
 formatter = logging.Formatter("%(levelname)s- %(message)s")
 ch.setFormatter(formatter)
 logger.addHandler(ch)
-
-# path details- rosbags base bath, target path , max length of initial path
-root_path = r"D:\teja"
-file_pattern = "*.bag"
-target_path = r"D:\npz_files"
-_MAX_LENGTH = 25
 
 
 def get_all_bag_paths(root: str, pattern: str) -> List[str]:
@@ -81,7 +83,6 @@ def save_np():
         
 """
 
-
 async def save_np(bag_path):
     # read rosbag
     try:
@@ -112,10 +113,9 @@ async def save_np(bag_path):
 
         # f len(np_grid_data)>=10:
         no_samples = len(np_grid_data)
-        scenario_name = bag_path.split("\\")[-3]
-
-        folder_name = bag_path.split("\\")[-2]
-        np_file_name = bag_path.split("\\")[-1].split(".")[0]
+        scenario_name = bag_path.split(os.sep)[-3]
+        folder_name = bag_path.split(os.sep)[-2]
+        np_file_name = bag_path.split(os.sep)[-1].split(".")[0]
 
         if not isdir(os.path.join(target_path, scenario_name, folder_name)):
             os.makedirs(os.path.join(target_path, scenario_name, folder_name))
@@ -188,12 +188,10 @@ async def save_np(bag_path):
     except BaseException as E:
         logger.error(f"Error handling the file {bag_path}, because of {E}")
 
-
 async def main():
 
     for i in range(len(all_bag_paths)):
         await save_np(all_bag_paths[i])
-
 
 asyncio.run(main())
 
