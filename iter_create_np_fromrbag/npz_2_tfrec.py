@@ -4,7 +4,6 @@ from typing import List, Dict, Tuple, Type
 from numpy import ndarray
 from pathlib import Path
 from fnmatch import fnmatch
-import matplotlib.pyplot as plt
 import re
 import logging
 import os
@@ -102,7 +101,7 @@ class Tfrecs_frm_npz:
     def __load_npz(
         file_path: Path,
         array_name: str,
-        data_type=np.float32,
+        data_type:Type =np.float32,
         normalize_factor: float = 1.0,
     ) -> ndarray:
         """To load compressed numpy file and perform type casting anf normalization
@@ -313,16 +312,17 @@ class Tfrecs_frm_npz:
                 in_car_odo,
             )
 
-            
+            """
             logger.info(
-                f"\n Grid map:{np.shape(in_grid_map)}\n \
+                f"\n \
+                Grid map:{np.shape(in_grid_map)}\n \
                 Grid Orig resol:{np.shape(in_grid_org_res)}\n \
                 Init path:{np.shape(in_init_path)}\n \
                 Opt Path:{np.shape(out_opt_path)}\n \
                 Left bnd:{np.shape(in_left_bnd)}\n \
                 Right bnd{np.shape(in_right_bnd)}\n \
                 Car x,y,theta:{np.shape(in_car_odo)}\n")
-            
+            """
 
             dict_data = {
                 "in_grid_map": in_grid_map,
