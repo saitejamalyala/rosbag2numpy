@@ -5,6 +5,7 @@ import time
 import os
 from fnmatch import fnmatch
 from typing import List
+from pathlib import Path
 import logging
 import numpy as np
 import asyncio
@@ -28,7 +29,16 @@ ch.setFormatter(formatter)
 logger.addHandler(ch)
 
 
-def get_all_bag_paths(root: str, pattern: str) -> List[str]:
+def get_all_bag_paths(root: Path, pattern: str) -> List[Path]:
+    """Fetch list of all bag paths in the root directory (where all paths are stored)
+
+    Args:
+        root (Path): Root path
+        pattern (str): pattern of file (file extension)
+
+    Returns:
+        List[Path]: List of paths of rosbags
+    """   
     list_all_bags = []
     for path, subdirs, files in os.walk(root):
         for name in files:
@@ -37,10 +47,12 @@ def get_all_bag_paths(root: str, pattern: str) -> List[str]:
 
     return list_all_bags
 
+async def save_np(bag_path:Path):
+    """save to compressed numpy arrays
 
-all_bag_paths = get_all_bag_paths(root=root_path, pattern=file_pattern)
-
-async def save_np(bag_path):
+    Args:
+        bag_path (Path): path to rosbag file
+    """
     # read rosbag
     try:
         rosbag_reader = Read_Ros_Bag(path=bag_path)
@@ -77,6 +89,7 @@ async def save_np(bag_path):
         if not isdir(os.path.join(target_path, scenario_name, folder_name)):
             os.makedirs(os.path.join(target_path, scenario_name, folder_name))
 
+        # Saving in numpy compressed format
         np.savez_compressed(
             os.path.join(
                 target_path,
@@ -146,6 +159,9 @@ async def save_np(bag_path):
         logger.error(f"Error handling the file {bag_path}, because of {E}")
 
 async def main():
+    """Loop through all bags and store necessary data into a compressex numpy arrray
+    """
+    all_bag_paths = get_all_bag_paths(root=root_path, pattern=file_pattern)
 
     for i in range(len(all_bag_paths)):
         await save_np(all_bag_paths[i])
