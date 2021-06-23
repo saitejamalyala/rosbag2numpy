@@ -57,6 +57,7 @@ class dataset_loader:
         example["opt_path"] = tf.reshape(example["opt_path"], [25, 2])
 
         # return format (input1,input2,input3, input4.......),output
+        # order important
 
         return (example["grid_map"],example["grid_org_res"],example["left_bnd"],
             example["right_bnd"],example["car_odo"],example["init_path"],
@@ -129,8 +130,10 @@ class dataset_loader:
         Returns:
             Tuple[List[Path], List[Path], List[Path]]: list of train dataset paths, validation dataset paths, testing dataset paths
         """
-        list_train, list_test = train_test_split(list_paths, test_size=1 - train_size)
-        list_test, list_valid = train_test_split(list_test, test_size=0.5)
+        list_train, list_test = train_test_split(list_paths, test_size=1 - train_size, random_state=2021)
+        list_test, list_valid = train_test_split(list_test, test_size=0.5, random_state=2021)
+
+        print(f"Number of records, Train files:{len(list_train)}, validation files:{len(list_valid)}, Test Files:{len(list_test)}")
 
         return list_train, list_valid, list_test
 
