@@ -1,5 +1,4 @@
 import tensorflow as tf
-import random
 from glob import glob
 from typing import List,Tuple
 from pathlib import Path
