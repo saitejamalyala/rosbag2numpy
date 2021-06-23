@@ -1,4 +1,5 @@
 import numpy as np
+from numpy.core.numeric import array_equiv
 import tensorflow as tf
 from typing import List, Dict, Tuple, Type
 from numpy import ndarray
@@ -8,11 +9,12 @@ import re
 import logging
 import os
 from tqdm import trange
+import numpy as np
 
 print(tf.__version__)
 
 # Logging setup
-logging.basicConfig(filename="nzp2tfrec.log", filemode="a", level=logging.INFO)
+logging.basicConfig(filename="nzp2tfrec-zeros_check.log", filemode="a", level=logging.INFO)
 logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.INFO)
 ch = logging.StreamHandler()
@@ -173,6 +175,7 @@ class Tfrecs_frm_npz:
         car_odo: ndarray,
         init_path: ndarray,
         opt_path: ndarray,
+        file_details:str,
     ) -> tf.train.Example:
         """To create a tf.train.Example for sample
 
@@ -199,6 +202,12 @@ class Tfrecs_frm_npz:
             return tf.train.Feature(
                 bytes_list=tf.train.BytesList(value=[value.tostring()])
             )
+        
+        def string_feature(value):
+            """Returns a bytes_list from a string / byte."""
+            return tf.train.Feature(
+                bytes_list=tf.train.BytesList(value=[value])
+            )
 
         feature = {
             # model inputs
@@ -208,6 +217,7 @@ class Tfrecs_frm_npz:
             "right_bnd": bytes_feature(right_bnd),
             "car_odo": bytes_feature(car_odo),
             "init_path": bytes_feature(init_path),
+            "file_details":string_feature(file_details),
             # model outputs
             "opt_path": bytes_feature(opt_path),
         }
@@ -261,6 +271,17 @@ class Tfrecs_frm_npz:
                     # print(np.shape(np_init_path[i]))
                     # create example for single sample
                     # Order of the parameters passed in __create_example is critically important
+                    if grid_org_res[s][2]==0.0 or grid_org_res[s][1]==0.0 or grid_org_res[s][0]==0.0:
+                        logger.info(f"Files with zeros: {scene_name}/{folder_name}/{file_name}")
+                    elif np.array_equiv(init_path[s],np.zeros_like(init_path[s])):
+                        logger.info(f"Files with zeros: {scene_name}/{folder_name}/{file_name}")
+                    elif np.array_equiv(left_bnd[s],np.zeros_like(left_bnd[s])):
+                        logger.info(f"Files with zeros: {scene_name}/{folder_name}/{file_name}")
+                    elif np.array_equiv(right_bnd[s],np.zeros_like(right_bnd[s])):
+                        logger.info(f"Files with zeros: {scene_name}/{folder_name}/{file_name}")
+                    else :
+                        logger.info(f"Grid_org_res:{grid_org_res[s]} in {scene_name}/{folder_name}/{file_name}")
+
                     example = self.__create_example(
                         grid_map=grid_map[s],
                         grid_org_res=grid_org_res[s],
@@ -269,6 +290,7 @@ class Tfrecs_frm_npz:
                         car_odo=car_odo[s],
                         init_path=init_path[s],
                         opt_path=opt_path[s],
+                        file_details = bytes(f"{scene_name}/{folder_name}/{file_name}",encoding='utf-8')
                     )
                     # serialize the single sample example to string
                     writer.write(example.SerializeToString())
@@ -298,7 +320,7 @@ class Tfrecs_frm_npz:
             in_left_bnd = self.__load_npz(all_lr_bnd_paths[i], "left_bnd")
             in_right_bnd = self.__load_npz(all_lr_bnd_paths[i], "right_bnd")
             in_car_odo = self.__load_npz(all_odo_paths[i], "odo_data")
-
+            
             # load outputs
             out_opt_path = self.__load_npz(all_opt_paths[i], "opt_path")
 
