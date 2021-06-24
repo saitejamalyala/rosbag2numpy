@@ -61,7 +61,7 @@ class dataset_loader:
 
         return (example["grid_map"],example["grid_org_res"],example["left_bnd"],
             example["right_bnd"],example["car_odo"],example["init_path"],
-            ),example["opt_path"]
+            example["file_details"]),example["opt_path"]
 
     def __parse_tfrecord_fn_ds(self, example):
         """serialize data, using features dictionary
@@ -81,6 +81,7 @@ class dataset_loader:
             "right_bnd": tf.io.FixedLenFeature([], tf.string),
             "car_odo": tf.io.FixedLenFeature([], tf.string),
             "init_path": tf.io.FixedLenFeature([], tf.string),
+            "file_details" : tf.io.FixedLenFeature([],tf.string),
             # model ouput
             "opt_path": tf.io.FixedLenFeature([], tf.string),
         }
