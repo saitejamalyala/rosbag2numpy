@@ -10,13 +10,13 @@ class dataset_loader:
     """Dataset loader class, fetch records, shuffle and split and build tf.data.Dataset"""
 
     def __init__(
-        self, tfrec_dir: Path, train_size: float = 0.7, batch_size: int = 16
+        self, tfrec_dir: Path, train_size: float = 0.7, batch_size: int = 16, shuffle_buffer: int=32*10
     ) -> None:
         self.autotune = tf.data.experimental.AUTOTUNE
         self.tfrecords_dir = tfrec_dir
         self.train_size = train_size
         self.batch_size = batch_size
-        self.shuffle_buffer = batch_size * 10
+        self.shuffle_buffer = shuffle_buffer
         pass
 
     # function to contruct back from tf record example

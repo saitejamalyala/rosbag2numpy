@@ -1,7 +1,9 @@
 params = {
+    "Description": '',
+
     #-------------- Data set Parameters ------------#
     "H_BATCH_SIZE" :32,
-    "H_SHUFFLE_BUFFER" : 32*10,
+    "H_SHUFFLE_BUFFER" : 32*100,
 
     "dataset_dir":'/netpool/work/gpu-3/users/malyalasa/New_folder/tf_records',
     #------------ Model Hyper paramaters ----------#
