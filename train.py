@@ -133,8 +133,15 @@ def plot_scene(features):
     return res,plt
 
 class cb_log_pred(tf.keras.callbacks.Callback):
+    """Custom call back function to log model predictions at end of the epoch to wandb
 
+    Args:
+        ds_test ([type]): test dataset
+        np_test_dataset (Dict[str,Union[ndarray,List]]): test dataset in numpy format
+        test_index (int, optional): [description]. Defaults to 15.
+    """
     def __init__(self,ds_test,np_test_dataset:Dict[str,Union[ndarray,List]],test_index:int=15):
+    
         super(cb_log_pred).__init__()
         self.np_ds_test=np_test_dataset
         self.test_idx = test_index
