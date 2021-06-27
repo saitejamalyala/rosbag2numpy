@@ -1,5 +1,4 @@
 
-from numpy import float16
 from tensorflow.keras import layers
 from tensorflow.keras import models
 import tensorflow as tf
@@ -31,18 +30,19 @@ list_mask=[[1., 1.],
        [1., 1.]]
 
 
-class custom_mask(layers.Layer):
+class CustomMaskLayer(layers.Layer):
     """Layer that masks tensor at specific locations as mentioned in binary tensor 
 
     Args:
-        layers ([type]): [description]
+        layers (layers.Layer): keras.layers baseclass
     """    
-    def __init__(self, list_mask,trainable=False, name="mask_at_position",**kwargs):
-
-        super().__init__(trainable=trainable, name=name,**kwargs)
+    def __init__(self, list_mask,name=None,**kwargs):
+        
         self.list_mask = list_mask
+        super(CustomMaskLayer,self).__init__(name=name,**kwargs)
+        
 
-    def call(self, inputs, **kwargs):
+    def call(self, inputs):
         temp = inputs
         mask = tf.constant(self.list_mask,dtype=tf.float32)
         # masking with first and last co-ordinate
@@ -50,7 +50,13 @@ class custom_mask(layers.Layer):
         output = first_last_skip_conn
         return output
 
+    def get_config(self):
 
+        config = super(CustomMaskLayer,self).get_config()
+        config.update({
+            "list_mask": self.list_mask,
+        })
+        return config
 
 def nn(full_skip:bool=True):
 
@@ -130,7 +136,7 @@ def nn(full_skip:bool=True):
         # masking with first and last co-ordinate
         first_last_skip_conn = tf.math.multiply(first_last_skip_conn,ip_init_path)
         """
-        first_last_skip_conn= custom_mask(list_mask=list_mask)(ip_init_path)
+        first_last_skip_conn= CustomMaskLayer(list_mask=list_mask)(ip_init_path)
         reshape_first_last_skip = layers.Reshape((50,))(first_last_skip_conn)
         output = layers.add([output, reshape_first_last_skip])
         output = layers.Dense(50, activation='linear')(output)

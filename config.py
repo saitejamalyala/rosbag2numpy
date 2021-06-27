@@ -1,5 +1,5 @@
 params = {
-    "Description": 'Endpoint loss added with weightage of loss_weights parameter',
+    "Description": 'checking previous run with updated get_config, as i wasnt able to load model, because of wrong config',
 
     #-------------- Data set Parameters ------------#
     "H_BATCH_SIZE" :32,
@@ -11,7 +11,7 @@ params = {
     "lr":0.02,
     "optimizer":'adam',
     "metric":'accuracy',
-    "loss_weights":[1,0.25],
+    "loss_weights":[1,0],
     #----------- directory paths -----------------#
     "log_dir": '/netpool/work/gpu-3/users/malyalasa/New_folder/rosbag2numpy/logging',
     
