@@ -1,5 +1,5 @@
 params = {
-    "Description": 'checking previous run with updated get_config, as i wasnt able to load model, because of wrong config',
+    "Description": "Testing scenario wise dataset building functionality",
 
     #-------------- Data set Parameters ------------#
     "H_BATCH_SIZE" :32,
@@ -11,10 +11,17 @@ params = {
     "lr":0.02,
     "optimizer":'adam',
     "metric":'accuracy',
-    "loss_weights":[1,0],
+    "loss_weights":[1,1],
     #----------- directory paths -----------------#
     "log_dir": '/netpool/work/gpu-3/users/malyalasa/New_folder/rosbag2numpy/logging',
-    
+
+
+    #---------- Model params -----------#
+    "drop_rate":{
+        "dense_rate1":0.5,
+        "dense_rate2":0.1,
+        "dense_rate3":0.1,
+    }
 }
 
 

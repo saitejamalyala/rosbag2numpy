@@ -4,7 +4,8 @@ from glob import glob
 from typing import List, Tuple
 from pathlib import Path
 from sklearn.model_selection import train_test_split
-
+import random
+import numpy as np
 
 class dataset_loader:
     """Dataset loader class, fetch records, shuffle and split and build tf.data.Dataset"""
@@ -163,5 +164,52 @@ class dataset_loader:
         )
 
         pprint.pprint(ds_train.element_spec, width=1)
+
+        return ds_train, ds_valid, ds_test
+
+
+    def __collect_tfrec_paths(self,list_dir):
+        assert len(list_dir)>=1
+        if len(list_dir)>1 :
+            list_in_list= [glob(f"{fold_path}/**/*.tfrec", recursive=True) for fold_path in list_dir]
+            flat_list = (np.concatenate(list_in_list).tolist())
+        else:
+
+            flat_list=glob(f"{list_dir[0]}/**/*.tfrec", recursive=True)
+        return flat_list
+
+    def build_scenario_dataset(self,no_train_scene,no_valid_scene,no_test_scene):
+        scenarios = glob(f"{self.tfrecords_dir}/*")
+        random.Random(2021).shuffle(scenarios)
+
+        try:
+            assert no_train_scene+no_valid_scene+no_test_scene==len(scenarios)
+            list_train = scenarios[0:(no_train_scene-1)]
+            list_valid = scenarios[no_train_scene:(no_train_scene+no_valid_scene)]
+            list_test = scenarios[no_train_scene+no_valid_scene:(no_train_scene+no_valid_scene+no_test_scene)]
+
+            train_tfrecs = self.__collect_tfrec_paths(list_train)
+            valid_tfrecs = self.__collect_tfrec_paths(list_valid)
+            test_tfrecs = self.__collect_tfrec_paths(list_test)
+
+            print(f"Building Dataset.......\n")
+
+            ds_train = self.get_dataset(
+                train_tfrecs, batch_size=self.batch_size, data_set_name="train"
+            )
+ 
+            ds_valid = self.get_dataset(
+                valid_tfrecs, batch_size=self.batch_size, data_set_name="valid"
+            )
+
+            ds_test = self.get_dataset(
+                test_tfrecs, batch_size=self.batch_size, data_set_name="test"
+            )
+            print(f"Number of records, Train files:{len(train_tfrecs)}, validation files:{len(valid_tfrecs)}, Test Files:{len(test_tfrecs)}")
+
+            pprint.pprint(ds_train.element_spec, width=1)
+            #glob(f"{self.tfrecords_dir}/**/*.tfrec", recursive=True)
+        except AssertionError as Err:
+            print(f"Build scenario dataset failed, {Err}")
 
         return ds_train, ds_valid, ds_test
