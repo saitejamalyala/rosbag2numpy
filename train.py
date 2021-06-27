@@ -10,7 +10,7 @@ from .config import params
 import wandb
 from wandb.keras import WandbCallback
 from .losses import euclidean_distance_loss,endpoint_loss
-from .models import base_model
+from .models import base_model,endpoint_in_model
 import os
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "1,2,3"
@@ -293,13 +293,15 @@ if __name__ == "__main__":
     np_ds_test = get_np_test_ds(ds_test=ds_test)
 
     # Build and compile model
-    pp_model = base_model.nn()
+    #pp_model = base_model.nn()
+    pp_model = endpoint_in_model.nn(full_skip=False)
     opt = _get_optimizer(params.get("optimizer"), lr=params.get("lr"))
     pp_model.compile(
         optimizer=opt, 
         loss=[euclidean_distance_loss,endpoint_loss],
         loss_weights=params.get("loss_weights"), metrics=params.get("metric")
     )
+    # Learning rate scheduler
     cb_reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(
         monitor="val_loss", factor=0.2, patience=4, min_lr=0.0001
     )
