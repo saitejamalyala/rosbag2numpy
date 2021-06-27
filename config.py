@@ -1,5 +1,5 @@
 params = {
-    "Description": '',
+    "Description": 'Endpoint loss added with weightage of loss_weights parameter',
 
     #-------------- Data set Parameters ------------#
     "H_BATCH_SIZE" :32,
@@ -11,9 +11,9 @@ params = {
     "lr":0.02,
     "optimizer":'adam',
     "metric":'accuracy',
-
+    "loss_weights":[1,0.25],
     #----------- directory paths -----------------#
-    "log_dir": '/netpool/work/gpu-3/users/malyalasa/New_folder/rosbag2numpy/logging'
+    "log_dir": '/netpool/work/gpu-3/users/malyalasa/New_folder/rosbag2numpy/logging',
     
 }
 
