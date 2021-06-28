@@ -279,6 +279,10 @@ class cd_wand_custom(WandbCallback):
 
         return super().on_epoch_begin(epoch, logs=logs)
 
+    def on_train_end(self, logs):
+        test_loss, test_accuracy = self.model.evaluate(self.ds_test)
+        wandb.log({"test_loss":test_loss,"test_accuracy":test_accuracy})
+        return super().on_train_end(logs=logs)
 
 if __name__ == "__main__":
     wandb.init(project="ppmodel_base", config=params)
@@ -289,16 +293,18 @@ if __name__ == "__main__":
         batch_size=params.get("H_BATCH_SIZE"),
         shuffle_buffer=params["H_SHUFFLE_BUFFER"],
     )
-    ds_train, ds_valid, ds_test = ds_loader.build_dataset()
+    # ds_train, ds_valid, ds_test = ds_loader.build_dataset()
+    ds_train, ds_valid, ds_test = ds_loader.build_scenario_dataset(no_train_scene=6,no_valid_scene=1,no_test_scene=1)
+
     np_ds_test = get_np_test_ds(ds_test=ds_test)
 
     # Build and compile model
     #pp_model = base_model.nn()
-    pp_model = endpoint_in_model.nn(full_skip=False)
+    pp_model = endpoint_in_model.nn(full_skip=True)
     opt = _get_optimizer(params.get("optimizer"), lr=params.get("lr"))
     pp_model.compile(
         optimizer=opt, 
-        loss=[euclidean_distance_loss,endpoint_loss],
+        loss=params.get("losses"),
         loss_weights=params.get("loss_weights"), metrics=params.get("metric")
     )
     # Learning rate scheduler
@@ -318,4 +324,4 @@ if __name__ == "__main__":
         ],
     )
 
-    test_loss, test_accuracy = pp_model.evaluate(ds_test)
+    #test_loss, test_accuracy = pp_model.evaluate(ds_test)
