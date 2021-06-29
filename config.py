@@ -1,5 +1,8 @@
+from tensorflow.keras.metrics import MeanAbsoluteError
+from .losses import *
+
 params = {
-    "Description": "Testing scenario wise dataset building functionality",
+    "Description": "reproducing full_skip is false scenario ",
 
     #-------------- Data set Parameters ------------#
     "H_BATCH_SIZE" :32,
@@ -10,17 +13,19 @@ params = {
     "epochs":50,
     "lr":0.02,
     "optimizer":'adam',
-    "metric":'accuracy',
-    "loss_weights":[1,1],
+    "metric":'accuracy',#MeanAbsoluteError(),
+    "losses":[euclidean_distance_loss,endpoint_loss],
+    "loss_weights":[1,0],
     #----------- directory paths -----------------#
     "log_dir": '/netpool/work/gpu-3/users/malyalasa/New_folder/rosbag2numpy/logging',
 
 
     #---------- Model params -----------#
+    "full_skip":False,
     "drop_rate":{
-        "dense_rate1":0.5,
-        "dense_rate2":0.1,
-        "dense_rate3":0.1,
+        "dense_rate1":0.0,
+        "dense_rate2":0.0,
+        "dense_rate3":0.0,
     }
 }
 

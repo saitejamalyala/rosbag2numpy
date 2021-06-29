@@ -2,6 +2,8 @@
 from tensorflow.keras import layers
 from tensorflow.keras import models
 import tensorflow as tf
+from tensorflow.keras.regularizers import l1,l1_l2,l2
+from ..config import params
 
 list_mask=[[1., 1.],
        [0., 0.],
@@ -112,24 +114,27 @@ def nn(full_skip:bool=True):
     output = layers.Dense(128, activation='linear')(concat_feat)
     output = layers.BatchNormalization()(output)
     output = layers.ReLU()(output)
-    
+    #output = layers.Dropout(params["drop_rate"]["dense_rate1"])(output)
     
     output = layers.Dense(96, activation='linear')(output)
     output = layers.BatchNormalization()(output)
     output = layers.ReLU()(output)
+    #output = layers.Dropout(params["drop_rate"]["dense_rate2"])(output)
     
     
     output = layers.Dense(64, activation='linear')(output)
     output = layers.BatchNormalization()(output)
     output = layers.ReLU()(output)
-    #output = layers.LeakyReLU()(output)
+    #output = layers.Dropout(params["drop_rate"]["dense_rate3"])(output)
 
+    #output = layers.LeakyReLU()(output)
     
     output = layers.Dense(50, activation='linear')(output)
 
     if full_skip:
         output = layers.add([output,reshape_init_path])
         output = layers.Dense(50, activation='linear')(output)
+
     else:
         """
         first_last_skip_conn = tf.constant(list_mask,dtype=tf.float32)
@@ -150,5 +155,8 @@ def nn(full_skip:bool=True):
     return nn_fun
 
 #nn(full_skip=False)
+
+if '__name__'=='__main__':
+   nn(full_skip=False)
 
 
