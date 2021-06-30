@@ -1,5 +1,5 @@
 #from tensorflow.keras.metrics import MeanAbsoluteError
-from .losses import *
+from losses import *
 
 params = {
     "Description": "reproducing scenario wise split , string not updated in previous run",
