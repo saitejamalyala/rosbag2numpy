@@ -1,8 +1,8 @@
-from tensorflow.keras.metrics import MeanAbsoluteError
+#from tensorflow.keras.metrics import MeanAbsoluteError
 from .losses import *
 
 params = {
-    "Description": "reproducing full_skip is false scenario ",
+    "Description": "reproducing scenario wise split , string not updated in previous run",
 
     #-------------- Data set Parameters ------------#
     "H_BATCH_SIZE" :32,
@@ -29,4 +29,14 @@ params = {
     }
 }
 
+
+generalization_model_params = {
+    "full_skip":True,
+    "drop_rate":{
+        "dense_rate1":0.5,
+        "dense_rate2":0.1,
+        "dense_rate3":0.1,
+    }
+
+}
 

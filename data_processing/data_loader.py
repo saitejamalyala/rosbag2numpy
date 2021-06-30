@@ -178,9 +178,11 @@ class dataset_loader:
             flat_list=glob(f"{list_dir[0]}/**/*.tfrec", recursive=True)
         return flat_list
 
-    def build_scenario_dataset(self,no_train_scene,no_valid_scene,no_test_scene):
-        scenarios = glob(f"{self.tfrecords_dir}/*")
-        random.Random(2021).shuffle(scenarios)
+    def build_scenario_dataset(self,consider_scenes:int,no_train_scene:int,no_valid_scene:int,no_test_scene:int):
+        scenarios = sorted(glob(f"{self.tfrecords_dir}/*"))
+        #if not consider_scenes==len(scenarios):
+        scenarios = scenarios[0:consider_scenes]
+        #random.Random(2020).shuffle(scenarios)
 
         try:
             assert no_train_scene+no_valid_scene+no_test_scene==len(scenarios)
@@ -213,3 +215,7 @@ class dataset_loader:
             print(f"Build scenario dataset failed, {Err}")
 
         return ds_train, ds_valid, ds_test
+
+
+if __name__=='__main__':
+    pass

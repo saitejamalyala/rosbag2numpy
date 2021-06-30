@@ -3,7 +3,7 @@ from tensorflow.keras import layers
 from tensorflow.keras import models
 import tensorflow as tf
 from tensorflow.keras.regularizers import l1,l1_l2,l2
-
+from ..config import generalization_model_params as g_params
 list_mask=[[1., 1.],
        [0., 0.],
        [0., 0.],
@@ -59,7 +59,7 @@ class CustomMaskLayer(layers.Layer):
         })
         return config
 
-def nn(full_skip:bool=True,params=None):
+def nn(full_skip:bool):
 
     # Grid Map input
     ip_gridmap = layers.Input(shape=(1536,1536,1))
@@ -115,28 +115,30 @@ def nn(full_skip:bool=True,params=None):
     output = layers.Dense(128, activation='linear')(concat_feat)
     output = layers.BatchNormalization()(output)
     output = layers.ReLU()(output)
-    #output = layers.Dropout(params["drop_rate"]["dense_rate1"])(output)
+    #output = layers.Dropout(g_params["drop_rate"]["dense_rate1"])(output)
     
     # Block 5
     output = layers.Dense(96, activation='linear')(output)
     output = layers.BatchNormalization()(output)
     output = layers.ReLU()(output)
-    #output = layers.Dropout(params["drop_rate"]["dense_rate2"])(output)
+    #output = layers.Dropout(g_params["drop_rate"]["dense_rate2"])(output)
     
     # Block 5
-    output = layers.Dense(64, activation='linear')(output)
+    output = layers.Dense(64, activation='linear',kernel_regularizer=l1(0.1))(output)
     output = layers.BatchNormalization()(output)
     output = layers.ReLU()(output)
-    #output = layers.Dropout(params["drop_rate"]["dense_rate3"])(output)
+    #output = layers.Dropout(g_params["drop_rate"]["dense_rate3"])(output)
 
     
     # Block 5
-    output = layers.Dense(50, activation='linear')(output)
+    output = layers.Dense(50, activation='linear',kernel_regularizer=l1(0.1))(output)
+
 
     if full_skip:
         # Block 6-fs
         output = layers.add([output,reshape_init_path])
-        output = layers.Dense(50, activation='linear')(output)
+        output = layers.Dense(50, activation='linear',kernel_regularizer=l1(0.1))(output)
+        
 
     else:
         """
@@ -150,7 +152,7 @@ def nn(full_skip:bool=True,params=None):
         output = layers.add([output, reshape_first_last_skip])
         output = layers.Dense(50, activation='linear')(output)
 
-    #output
+    #output layer
     output = layers.Reshape((25,2))(output)
     
     nn_fun = models.Model(inputs = [ip_gridmap,ip_grid_org_res,ip_left_bnd, ip_right_bnd, ip_car_odo, ip_init_path], outputs= output)
@@ -162,6 +164,6 @@ def nn(full_skip:bool=True,params=None):
 #nn(full_skip=False)
 
 if '__name__'=='__main__':
-   nn(full_skip=False)
+   nn(full_skip=True)
 
 
