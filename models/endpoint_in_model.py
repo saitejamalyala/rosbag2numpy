@@ -4,41 +4,42 @@ from tensorflow.keras import models
 import tensorflow as tf
 from tensorflow.keras.regularizers import l1,l1_l2,l2
 
-list_mask=[[1., 1.],
-       [0., 0.],
-       [0., 0.],
-       [0., 0.],
-       [0., 0.],
-       [0., 0.],
-       [0., 0.],
-       [0., 0.],
-       [0., 0.],
-       [0., 0.],
-       [0., 0.],
-       [0., 0.],
-       [0., 0.],
-       [0., 0.],
-       [0., 0.],
-       [0., 0.],
-       [0., 0.],
-       [0., 0.],
-       [0., 0.],
-       [0., 0.],
-       [0., 0.],
-       [0., 0.],
-       [0., 0.],
-       [0., 0.],
-       [1., 1.]]
 
-
+@tf.keras.utils.register_keras_serializable()
 class CustomMaskLayer(layers.Layer):
     """Layer that masks tensor at specific locations as mentioned in binary tensor 
 
     Args:
         layers (layers.Layer): keras.layers baseclass
     """    
-    def __init__(self, list_mask,name=None,**kwargs):
-        
+
+    def __init__(self, list_mask=[[1., 1.],
+                                [0., 0.],
+                                [0., 0.],
+                                [0., 0.],
+                                [0., 0.],
+                                [0., 0.],
+                                [0., 0.],
+                                [0., 0.],
+                                [0., 0.],
+                                [0., 0.],
+                                [0., 0.],
+                                [0., 0.],
+                                [0., 0.],
+                                [0., 0.],
+                                [0., 0.],
+                                [0., 0.],
+                                [0., 0.],
+                                [0., 0.],
+                                [0., 0.],
+                                [0., 0.],
+                                [0., 0.],
+                                [0., 0.],
+                                [0., 0.],
+                                [0., 0.],
+                                [1., 1.]],
+                                name=None,**kwargs):
+
         self.list_mask = list_mask
         super(CustomMaskLayer,self).__init__(name=name,**kwargs)
         
@@ -59,7 +60,7 @@ class CustomMaskLayer(layers.Layer):
         })
         return config
 
-def nn(full_skip:bool=True,params=None):
+def nn(full_skip:bool=False,params=None):
 
     # Grid Map input
     ip_gridmap = layers.Input(shape=(1536,1536,1))
@@ -140,12 +141,13 @@ def nn(full_skip:bool=True,params=None):
 
     else:
         """
+        #Implementation without CustomMaskLayer
         first_last_skip_conn = tf.constant(list_mask,dtype=tf.float32)
         # masking with first and last co-ordinate
         first_last_skip_conn = tf.math.multiply(first_last_skip_conn,ip_init_path)
         """
         # Block 6-endpoints_condition
-        first_last_skip_conn= CustomMaskLayer(list_mask=list_mask)(ip_init_path)
+        first_last_skip_conn= CustomMaskLayer()(ip_init_path)
         reshape_first_last_skip = layers.Reshape((50,))(first_last_skip_conn)
         output = layers.add([output, reshape_first_last_skip])
         output = layers.Dense(50, activation='linear')(output)

@@ -295,15 +295,15 @@ if __name__ == "__main__":
         shuffle_buffer=params["H_SHUFFLE_BUFFER"],
     )
 
-    #ds_train, ds_valid, ds_test = ds_loader.build_dataset()
-    ds_train, ds_valid, ds_test = ds_loader.build_scenario_dataset(consider_scenes=5,no_train_scene=3,no_valid_scene=1,no_test_scene=1)
+    ds_train, ds_valid, ds_test = ds_loader.build_dataset()
+    #ds_train, ds_valid, ds_test = ds_loader.build_scenario_dataset(consider_scenes=5,no_train_scene=3,no_valid_scene=1,no_test_scene=1)
 
     np_ds_test = get_np_test_ds(ds_test=ds_test)
 
     # Build and compile model
     #pp_model = base_model.nn()
-    #pp_model = endpoint_in_model.nn(full_skip=params.get("full_skip"))
-    pp_model = generalizing_endpoint_model.nn(full_skip= g_params.get("full_skip"))
+    pp_model = endpoint_in_model.nn(full_skip=params.get("full_skip"))
+    #pp_model = generalizing_endpoint_model.nn(full_skip= g_params.get("full_skip"))
 
     opt = _get_optimizer(params.get("optimizer"), lr=params.get("lr"))
     pp_model.compile(
