@@ -1,5 +1,5 @@
 #from tensorflow.keras.metrics import MeanAbsoluteError
-from losses import *
+from .losses import *
 
 params = {
     "Description": "reproducing scenario wise split , string not updated in previous run",
@@ -15,7 +15,7 @@ params = {
     "optimizer":'adam',
     "metric":'accuracy',#MeanAbsoluteError(),
     "losses":[euclidean_distance_loss,endpoint_loss],
-    "loss_weights":[1,0],
+    "loss_weights":[0.7,1],
     #----------- directory paths -----------------#
     "log_dir": '/netpool/work/gpu-3/users/malyalasa/New_folder/rosbag2numpy/logging',
 
@@ -23,15 +23,15 @@ params = {
     #---------- Model params -----------#
     "full_skip":False,
     "drop_rate":{
-        "dense_rate1":0.0,
-        "dense_rate2":0.0,
+        "dense_rate1":0.4,
+        "dense_rate2":0.8,
         "dense_rate3":0.0,
     }
 }
 
 
 generalization_model_params = {
-    "full_skip":True,
+    "full_skip":False,
     "drop_rate":{
         "dense_rate1":0.5,
         "dense_rate2":0.1,

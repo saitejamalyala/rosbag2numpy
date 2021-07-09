@@ -181,14 +181,19 @@ class dataset_loader:
     def build_scenario_dataset(self,consider_scenes:int,no_train_scene:int,no_valid_scene:int,no_test_scene:int):
         scenarios = sorted(glob(f"{self.tfrecords_dir}/*"))
         #if not consider_scenes==len(scenarios):
-        scenarios = scenarios[0:consider_scenes]
+        #scenarios = scenarios[0:consider_scenes]
         #random.Random(2020).shuffle(scenarios)
 
         try:
             assert no_train_scene+no_valid_scene+no_test_scene==len(scenarios)
+            """
             list_train = scenarios[0:(no_train_scene-1)]
             list_valid = scenarios[no_train_scene:(no_train_scene+no_valid_scene)]
             list_test = scenarios[no_train_scene+no_valid_scene:(no_train_scene+no_valid_scene+no_test_scene)]
+            """
+            list_train = scenarios[2:]
+            list_valid = [scenarios[1]]
+            list_test = [scenarios[0]]
 
             train_tfrecs = self.__collect_tfrec_paths(list_train)
             valid_tfrecs = self.__collect_tfrec_paths(list_valid)
