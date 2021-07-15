@@ -15,7 +15,7 @@ from .models import base_model,endpoint_in_model,generalizing_endpoint_model
 from .models import conv1x1_endpoint_in_model
 import os
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "2,4,6"
+os.environ["CUDA_VISIBLE_DEVICES"] = "1,4,5"
 
 
 def _get_optimizer(opt_name: str = "adam", lr: float = 0.02):
@@ -99,6 +99,7 @@ class cd_wand_custom(WandbCallback):
         ds_test,
         np_test_dataset:Dict[str,Union[ndarray,List]],
         test_index:int=15,
+        normalized_coords=True,
         # old
         monitor="val_loss",
         verbose=0,
@@ -156,6 +157,7 @@ class cd_wand_custom(WandbCallback):
         self.np_ds_test = np_test_dataset
         self.test_idx = test_index
         self.ds_test = ds_test
+        self.normalized_coords = normalized_coords
 
     pass
 
@@ -187,62 +189,117 @@ class cd_wand_custom(WandbCallback):
         predict_path = features["predictions"]
         file_details = features["file_details"]
 
-        # print(type(grid_map))
         plt.figure(figsize=(10, 10), dpi=200)
-        # ax=fig.add_subplot(1,1,1)
 
-        res = grid_org[2]
-        plt.plot(
-            (left_bnd[:, 0] - grid_org[0]) / res,
-            (left_bnd[:, 1] - grid_org[1]) / res,
-            "-.",
-            color="magenta",
-            markersize=0.5,
-            linewidth=0.5,
-        )
+        if self.normalized_coords:
+            # ax=fig.add_subplot(1,1,1)
+            plt.plot(
+                left_bnd[:, 0],
+                left_bnd[:, 1],
+                "-.",
+                color="magenta",
+                markersize=0.5,
+                linewidth=0.5,
+            )
 
-        plt.plot(
-            (init_path[:, 0] - grid_org[0]) / res,
-            (init_path[:, 1] - grid_org[1]) / res,
-            "o-",
-            color="lawngreen",
-            markersize=1,
-            linewidth=1,
-        )
-        plt.plot(
-            (opt_path[:, 0] - grid_org[0]) / res,
-            (opt_path[:, 1] - grid_org[1]) / res,
-            "--",
-            color="yellow",
-            markersize=1,
-            linewidth=1,
-        )
+            plt.plot(
+                init_path[:, 0],
+                init_path[:, 1],
+                "o-",
+                color="lawngreen",
+                markersize=1,
+                linewidth=1,
+            )
+            plt.plot(
+                opt_path[:, 0],
+                opt_path[:, 1],
+                "--",
+                color="yellow",
+                markersize=1,
+                linewidth=1,
+            )
 
-        plt.plot(
-            (predict_path[:, 0] - grid_org[0]) / res,
-            (predict_path[:, 1] - grid_org[1]) / res,
-            "--",
-            color="orange",
-            markersize=1,
-            linewidth=1,
-        )
+            plt.plot(
+                predict_path[:, 0],
+                predict_path[:, 1],
+                "--",
+                color="orange",
+                markersize=1,
+                linewidth=1,
+            )
 
-        plt.plot(
-            (right_bnd[:, 0] - grid_org[0]) / res,
-            (right_bnd[:, 1] - grid_org[1]) / res,
-            "-.",
-            color="magenta",
-            markersize=0.5,
-            linewidth=0.5,
-        )
+            plt.plot(
+                right_bnd[:, 0],
+                right_bnd[:, 1],
+                "-.",
+                color="magenta",
+                markersize=0.5,
+                linewidth=0.5,
+            )
 
-        plt.plot(
-            (car_odo[0] - grid_org[0]) / res,
-            (car_odo[1] - grid_org[1]) / res,
-            "r*",
-            color="red",
-            markersize=8,
-        )
+            plt.plot(
+                car_odo[0],
+                car_odo[1],
+                "r*",
+                color="red",
+                markersize=8,
+            )
+
+        else:
+            # print(type(grid_map))
+            # ax=fig.add_subplot(1,1,1)
+            res = grid_org[2]
+            plt.plot(
+                (left_bnd[:, 0] - grid_org[0]) / res,
+                (left_bnd[:, 1] - grid_org[1]) / res,
+                "-.",
+                color="magenta",
+                markersize=0.5,
+                linewidth=0.5,
+            )
+
+            plt.plot(
+                (init_path[:, 0] - grid_org[0]) / res,
+                (init_path[:, 1] - grid_org[1]) / res,
+                "o-",
+                color="lawngreen",
+                markersize=1,
+                linewidth=1,
+            )
+            plt.plot(
+                (opt_path[:, 0] - grid_org[0]) / res,
+                (opt_path[:, 1] - grid_org[1]) / res,
+                "--",
+                color="yellow",
+                markersize=1,
+                linewidth=1,
+            )
+
+            plt.plot(
+                (predict_path[:, 0] - grid_org[0]) / res,
+                (predict_path[:, 1] - grid_org[1]) / res,
+                "--",
+                color="orange",
+                markersize=1,
+                linewidth=1,
+            )
+
+            plt.plot(
+                (right_bnd[:, 0] - grid_org[0]) / res,
+                (right_bnd[:, 1] - grid_org[1]) / res,
+                "-.",
+                color="magenta",
+                markersize=0.5,
+                linewidth=0.5,
+            )
+
+            plt.plot(
+                (car_odo[0] - grid_org[0]) / res,
+                (car_odo[1] - grid_org[1]) / res,
+                "r*",
+                color="red",
+                markersize=8,
+            )
 
         plt.legend(
             [
@@ -263,7 +320,7 @@ class cd_wand_custom(WandbCallback):
         # fig.savefig(f"{save_fig_dir}/Test_index_{features['testidx']}.jpg",format='jpg',dpi=300)
         # print(type(file_details))
         # cp_plt = plt
-        return res, plt
+        return plt
 
     def on_epoch_begin(self, epoch, logs):
 
@@ -273,7 +330,7 @@ class cd_wand_custom(WandbCallback):
             np_ds_test=self.np_ds_test, test_idx=self.test_idx
         )
 
-        _, sample_fig = self.__plot_scene(features=sample_data)
+        sample_fig = self.__plot_scene(features=sample_data)
 
         if (epoch-1) % 2 == 0:
             wandb.log({f"sample_img_{epoch-1}": sample_fig})
@@ -294,6 +351,7 @@ if __name__ == "__main__":
         tfrec_dir=params.get("dataset_dir"),
         batch_size=params.get("H_BATCH_SIZE"),
         shuffle_buffer=params["H_SHUFFLE_BUFFER"],
+        normalize_coords=params["normalize_coords"],
     )
 
     #ds_train, ds_valid, ds_test = ds_loader.build_dataset()
@@ -305,7 +363,8 @@ if __name__ == "__main__":
     #pp_model = base_model.nn()
     #pp_model = endpoint_in_model.nn(full_skip=params.get("full_skip"))
     #pp_model = generalizing_endpoint_model.nn(full_skip= g_params.get("full_skip"))
-    pp_model = conv1x1_endpoint_in_model.nn(full_skip= g_params.get("full_skip"),params=params)
+    pp_model = conv1x1_endpoint_in_model.nn(full_skip= params.get("full_skip"),params=params)
+    #pp_model = pathnorm_endpoint_model.nn(full_skip= params.get("full_skip"),params=params)
 
     opt = _get_optimizer(params.get("optimizer"), lr=params.get("lr"))
     pp_model.compile(
@@ -326,7 +385,7 @@ if __name__ == "__main__":
         callbacks=[
             cb_reduce_lr,
             #WandbCallback(),
-            cd_wand_custom(ds_test=ds_test, np_test_dataset=np_ds_test,test_index=15),
+            cd_wand_custom(ds_test=ds_test, np_test_dataset=np_ds_test,test_index=15,normalized_coords=params.get("normalize_coords")),
         ],
     )
 

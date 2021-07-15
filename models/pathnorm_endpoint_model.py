@@ -1,3 +1,4 @@
+    
 
 from tensorflow.keras import layers
 from tensorflow.keras import models
@@ -5,11 +6,12 @@ import tensorflow as tf
 from tensorflow.keras.regularizers import l1,l1_l2,l2
 from tensorflow.python.keras.regularizers import L1
 
+from tensorflow.keras import backend as K
 from ..config import params
 import os
-print(tf.__version__)
-os.environ['CUDA_VISIBLE_DEVICES']="3"
 
+tf.constant()
+os.environ["CUDA_VISIBLE_DEVICES"] = "2,4,6"
 #@tf.keras.utils.register_keras_serializable()
 class CustomMaskLayer(layers.Layer):
     """Layer that masks tensor at specific locations as mentioned in binary tensor 
@@ -65,6 +67,11 @@ class CustomMaskLayer(layers.Layer):
         })
         return config
 
+def normalize(pair):
+    path,org_res = pair
+    path = (path-org_res[:2])
+    return path
+
 def nn(full_skip=False,params=None):
     fp_list_mask=[[1., 1.],
                 [0., 0.],
@@ -99,37 +106,35 @@ def nn(full_skip=False,params=None):
     #x_A = layers.Conv2D(3,kernel_size=1,strides=1)(ip_gridmap)
     
     # Block 1
-    
-    x_A = layers.Conv2D(16,kernel_size=3,strides=2)(ip_gridmap)
-    x_A = layers.LeakyReLU()(x_A)
+    x_A = layers.Conv2D(16,kernel_size=7,strides=2)(ip_gridmap)
+    x_A = layers.ReLU()(x_A)
     x_A = layers.BatchNormalization()(x_A)
     x_A = layers.AvgPool2D(pool_size=(4,4))(x_A)
     
-    
     # Block 2
-    
+    """
     x_A = layers.Conv2D(32,kernel_size=3,strides=1)(x_A)
-    x_A = layers.LeakyReLU()(x_A)
+    x_A = layers.ReLU()(x_A)
     x_A = layers.BatchNormalization()(x_A)
-    #x_A = layers.AvgPool2D(pool_size=(2,2))(x_A)
-    
+    x_A = layers.AvgPool2D(pool_size=(2,2))(x_A)
+    """
     # 1x1 blocks
     """
-        x_A = layers.Conv2D(16,kernel_size=1,strides=1)(x_A)
-        x_A = layers.ReLU()(x_A)
-        x_A = layers.BatchNormalization()(x_A)
+    x_A = layers.Conv2D(16,kernel_size=1,strides=1)(x_A)
+    x_A = layers.ReLU()(x_A)
+    x_A = layers.BatchNormalization()(x_A)
     """
     x_A = layers.Conv2D(8,kernel_size=1,strides=1)(x_A)
 
-    x_A = layers.Conv2D(2,kernel_size=1,strides=1)(x_A)
+    x_A = layers.Conv2D(1,kernel_size=1,strides=1)(x_A)
 
 
     # Block 3
     """
-        x_A = layers.Conv2D(64,kernel_size=3,strides=2)(x_A)
-        x_A = layers.BatchNormalization()(x_A)
-        x_A = layers.ReLU()(x_A)
-        x_A = layers.AvgPool2D(pool_size=(2,2))(x_A)
+    x_A = layers.Conv2D(64,kernel_size=3,strides=2)(x_A)
+    x_A = layers.BatchNormalization()(x_A)
+    x_A = layers.ReLU()(x_A)
+    x_A = layers.AvgPool2D(pool_size=(2,2))(x_A)
     """
     x_A = layers.Flatten()(x_A)
 
@@ -144,6 +149,12 @@ def nn(full_skip=False,params=None):
 
     # branch 5
     conc_grid_orgres_car_odo = layers.concatenate([ip_grid_org_res,ip_car_odo])
+
+    # normalized paths
+    tf.print(f"TENSOR VALUE: {ip_grid_org_res}")
+    #rep_ip_grid_org_res = tf.multiply(tf.ones([25,2]),ip_grid_org_res[:,:2])
+    #ip_init_path = tf.math.subtract(ip_init_path,(ip_grid_org_res[:2]))
+    ip_init_path = layers.Lambda(normalize)([ip_init_path,ip_grid_org_res])
 
     #reshaping paths
     reshape_init_path = layers.Reshape((50,))(ip_init_path)
@@ -162,23 +173,7 @@ def nn(full_skip=False,params=None):
     #output = layers.ReLU()(output)
     output = layers.Dropout(params.get("drop_rate")["dense_rate1"])(output)
     
-    # Block 5
-    """
-    output = layers.Dense(32, activation='linear')(output)
-    output = layers.BatchNormalization()(output)
-    output = layers.ReLU()(output)
-    """
-    #output = layers.Dropout(params["drop_rate"]["dense_rate2"])(output)
-    
-    # Block 5
-    """
-    output = layers.Dense(64, activation='linear')(output)
-    output = layers.BatchNormalization()(output)
-    output = layers.ReLU()(output)
-    """
-    #output = layers.Dropout(params["drop_rate"]["dense_rate3"])(output)
 
-    
     # Block 5
     output = layers.Dense(50, activation='linear',kernel_regularizer=l1(0.01))(output)
     output = layers.Dropout(params.get("drop_rate")["dense_rate2"])(output)
@@ -202,7 +197,7 @@ def nn(full_skip=False,params=None):
             output = layers.add([output, reshape_first_last_skip])
             output = layers.Dense(50, activation='linear')(output)
 
-        # only first point skip connection(use full_skip=none)  
+        # only first point skip connection  
         else:   
             first_last_skip_conn = tf.constant(fp_list_mask,dtype=tf.float32)
             # masking with first 

@@ -11,13 +11,15 @@ class dataset_loader:
     """Dataset loader class, fetch records, shuffle and split and build tf.data.Dataset"""
 
     def __init__(
-        self, tfrec_dir: Path, train_size: float = 0.7, batch_size: int = 16, shuffle_buffer: int=32*10
+        self, tfrec_dir: Path, train_size: float = 0.7, batch_size: int = 16, shuffle_buffer: int=32*10,
+        normalize_coords:bool=True
     ) -> None:
         self.autotune = tf.data.experimental.AUTOTUNE
         self.tfrecords_dir = tfrec_dir
         self.train_size = train_size
         self.batch_size = batch_size
         self.shuffle_buffer = shuffle_buffer
+        self.normalize_coords = normalize_coords 
         pass
 
     # function to contruct back from tf record example
@@ -59,7 +61,19 @@ class dataset_loader:
 
         # return format (input1,input2,input3, input4.......),output
         # order important
+        
+        if self.normalize_coords==True:
+            example["left_bnd"] = (example["left_bnd"]-example["grid_org_res"][:2])/example["grid_org_res"][2]
+            example["right_bnd"] = (example["right_bnd"]-example["grid_org_res"][:2])/example["grid_org_res"][2]
+            example["init_path"] = (example["init_path"]-example["grid_org_res"][:2])/example["grid_org_res"][2]
+            example["opt_path"] = (example["opt_path"]-example["grid_org_res"][:2])/example["grid_org_res"][2]
 
+            # we shouldnt normalize heading in ego position
+            car_odo_norm = (example["car_odo"][:2]-example["grid_org_res"][:2])/example["grid_org_res"][2]
+            head = example["car_odo"][2]
+            example["car_odo"] = tf.squeeze(tf.concat([tf.reshape(car_odo_norm,shape=(2,1)),tf.reshape(head,shape=(1,1))],axis=0))
+
+        
         return (example["grid_map"],example["grid_org_res"],example["left_bnd"],
             example["right_bnd"],example["car_odo"],example["init_path"],
             example["file_details"]),example["opt_path"]
