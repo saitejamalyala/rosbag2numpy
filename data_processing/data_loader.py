@@ -12,7 +12,7 @@ class dataset_loader:
 
     def __init__(
         self, tfrec_dir: Path, train_size: float = 0.7, batch_size: int = 16, shuffle_buffer: int=32*10,
-        normalize_coords:bool=True
+        normalize_coords:bool=True, normalize_factor=1
     ) -> None:
         self.autotune = tf.data.experimental.AUTOTUNE
         self.tfrecords_dir = tfrec_dir
@@ -20,7 +20,8 @@ class dataset_loader:
         self.batch_size = batch_size
         self.shuffle_buffer = shuffle_buffer
         self.normalize_coords = normalize_coords 
-        pass
+        self.normalize_factor = normalize_factor
+        
 
     # function to contruct back from tf record example
     def __prepare_sample(self, example):
@@ -63,10 +64,11 @@ class dataset_loader:
         # order important
         
         if self.normalize_coords==True:
-            example["left_bnd"] = (example["left_bnd"]-example["grid_org_res"][:2])/example["grid_org_res"][2]
-            example["right_bnd"] = (example["right_bnd"]-example["grid_org_res"][:2])/example["grid_org_res"][2]
-            example["init_path"] = (example["init_path"]-example["grid_org_res"][:2])/example["grid_org_res"][2]
-            example["opt_path"] = (example["opt_path"]-example["grid_org_res"][:2])/example["grid_org_res"][2]
+            nf = tf.constant(self.normalize_factor,dtype=tf.float32,name="normalization factor")
+            example["left_bnd"] = ((example["left_bnd"]-example["grid_org_res"][:2])/example["grid_org_res"][2])/nf
+            example["right_bnd"] = ((example["right_bnd"]-example["grid_org_res"][:2])/example["grid_org_res"][2])/nf
+            example["init_path"] =((example["init_path"]-example["grid_org_res"][:2])/example["grid_org_res"][2])/nf
+            example["opt_path"] = ((example["opt_path"]-example["grid_org_res"][:2])/example["grid_org_res"][2])/nf
 
             # we shouldnt normalize heading in ego position
             car_odo_norm = (example["car_odo"][:2]-example["grid_org_res"][:2])/example["grid_org_res"][2]
@@ -181,7 +183,6 @@ class dataset_loader:
 
         return ds_train, ds_valid, ds_test
 
-
     def __collect_tfrec_paths(self,list_dir):
         assert len(list_dir)>=1
         if len(list_dir)>1 :
@@ -194,20 +195,23 @@ class dataset_loader:
 
     def build_scenario_dataset(self,consider_scenes:int,no_train_scene:int,no_valid_scene:int,no_test_scene:int):
         scenarios = sorted(glob(f"{self.tfrecords_dir}/*"))
+        print(f"Scenarios:{scenarios}")
         #if not consider_scenes==len(scenarios):
         #scenarios = scenarios[0:consider_scenes]
-        #random.Random(2020).shuffle(scenarios)
+        random.Random(2020).shuffle(scenarios)
 
         try:
             assert no_train_scene+no_valid_scene+no_test_scene==len(scenarios)
-            """
+            
             list_train = scenarios[0:(no_train_scene-1)]
             list_valid = scenarios[no_train_scene:(no_train_scene+no_valid_scene)]
             list_test = scenarios[no_train_scene+no_valid_scene:(no_train_scene+no_valid_scene+no_test_scene)]
+            
             """
             list_train = scenarios[2:]
             list_valid = [scenarios[1]]
             list_test = [scenarios[0]]
+            """
 
             train_tfrecs = self.__collect_tfrec_paths(list_train)
             valid_tfrecs = self.__collect_tfrec_paths(list_valid)

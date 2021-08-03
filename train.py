@@ -12,10 +12,10 @@ import wandb
 from wandb.keras import WandbCallback
 from .losses import euclidean_distance_loss,endpoint_loss
 from .models import base_model,endpoint_in_model,generalizing_endpoint_model
-from .models import conv1x1_endpoint_in_model
+from .models import conv1x1_endpoint_in_model,coordconv1x1_endpoint_in_model, LSTMconv1x1_endpoint_in_model 
 import os
-
-os.environ["CUDA_VISIBLE_DEVICES"] = "1,4,5"
+print(tf.__version__)
+os.environ["CUDA_VISIBLE_DEVICES"] = "4,5,6"
 
 
 def _get_optimizer(opt_name: str = "adam", lr: float = 0.02):
@@ -23,7 +23,7 @@ def _get_optimizer(opt_name: str = "adam", lr: float = 0.02):
     if opt_name == "adam":
         return tf.keras.optimizers.Adam(learning_rate=lr)
     else:
-        return tf.keras.optimizers.Adam(learning_rate=lr)
+        return tf.keras.optimizers.RMSprop(learning_rate=lr)
 
 
 def _get_test_ds_size(ds_test) -> int:
@@ -100,6 +100,7 @@ class cd_wand_custom(WandbCallback):
         np_test_dataset:Dict[str,Union[ndarray,List]],
         test_index:int=15,
         normalized_coords=True,
+        normalize_factor=1.0,
         # old
         monitor="val_loss",
         verbose=0,
@@ -158,7 +159,7 @@ class cd_wand_custom(WandbCallback):
         self.test_idx = test_index
         self.ds_test = ds_test
         self.normalized_coords = normalized_coords
-
+        self.normalize_factor = normalize_factor
     pass
 
     def __get_index_data(self, np_ds_test, test_idx):
@@ -177,7 +178,7 @@ class cd_wand_custom(WandbCallback):
 
         return test_data
 
-    def __plot_scene(self, features):
+    def __plot_scene(self, epoch, features):
         grid_map = features["grid_map"]
         grid_org = features["grid_org_res"]  # [x,y,resolution]
         left_bnd = features["left_bnd"]
@@ -194,8 +195,8 @@ class cd_wand_custom(WandbCallback):
         if self.normalized_coords:
             # ax=fig.add_subplot(1,1,1)
             plt.plot(
-                left_bnd[:, 0],
-                left_bnd[:, 1],
+                left_bnd[:, 0]/self.normalize_factor,
+                left_bnd[:, 1]/self.normalize_factor,
                 "-.",
                 color="magenta",
                 markersize=0.5,
@@ -203,16 +204,16 @@ class cd_wand_custom(WandbCallback):
             )
 
             plt.plot(
-                init_path[:, 0],
-                init_path[:, 1],
+                init_path[:, 0]/self.normalize_factor,
+                init_path[:, 1]/self.normalize_factor,
                 "o-",
                 color="lawngreen",
                 markersize=1,
                 linewidth=1,
             )
             plt.plot(
-                opt_path[:, 0],
-                opt_path[:, 1],
+                opt_path[:, 0]/self.normalize_factor,
+                opt_path[:, 1]/self.normalize_factor,
                 "--",
                 color="yellow",
                 markersize=1,
@@ -220,8 +221,8 @@ class cd_wand_custom(WandbCallback):
             )
 
             plt.plot(
-                predict_path[:, 0],
-                predict_path[:, 1],
+                predict_path[:, 0]/self.normalize_factor,
+                predict_path[:, 1]/self.normalize_factor,
                 "--",
                 color="orange",
                 markersize=1,
@@ -229,8 +230,8 @@ class cd_wand_custom(WandbCallback):
             )
 
             plt.plot(
-                right_bnd[:, 0],
-                right_bnd[:, 1],
+                right_bnd[:, 0]/self.normalize_factor,
+                right_bnd[:, 1]/self.normalize_factor,
                 "-.",
                 color="magenta",
                 markersize=0.5,
@@ -238,8 +239,8 @@ class cd_wand_custom(WandbCallback):
             )
 
             plt.plot(
-                car_odo[0],
-                car_odo[1],
+                car_odo[0]/self.normalize_factor,
+                car_odo[1]/self.normalize_factor,
                 "r*",
                 color="red",
                 markersize=8,
@@ -320,6 +321,9 @@ class cd_wand_custom(WandbCallback):
         # fig.savefig(f"{save_fig_dir}/Test_index_{features['testidx']}.jpg",format='jpg',dpi=300)
         # print(type(file_details))
         # cp_plt = plt
+        wandb.log({f"sample_img_{epoch-1}": plt})
+        plt.close()
+
         return plt
 
     def on_epoch_begin(self, epoch, logs):
@@ -330,12 +334,12 @@ class cd_wand_custom(WandbCallback):
             np_ds_test=self.np_ds_test, test_idx=self.test_idx
         )
 
-        sample_fig = self.__plot_scene(features=sample_data)
-
+        sample_fig = self.__plot_scene(epoch,features=sample_data)
+        """
         if (epoch-1) % 2 == 0:
             wandb.log({f"sample_img_{epoch-1}": sample_fig})
             sample_fig.close()
-
+        """
         return super().on_epoch_begin(epoch, logs=logs)
 
     def on_train_end(self, logs):
@@ -355,7 +359,7 @@ if __name__ == "__main__":
     )
 
     #ds_train, ds_valid, ds_test = ds_loader.build_dataset()
-    ds_train, ds_valid, ds_test = ds_loader.build_scenario_dataset(consider_scenes=8,no_train_scene=6,no_valid_scene=1,no_test_scene=1)
+    ds_train, ds_valid, ds_test = ds_loader.build_scenario_dataset(consider_scenes=10,no_train_scene=8,no_valid_scene=1,no_test_scene=1)
 
     np_ds_test = get_np_test_ds(ds_test=ds_test)
 
@@ -363,8 +367,14 @@ if __name__ == "__main__":
     #pp_model = base_model.nn()
     #pp_model = endpoint_in_model.nn(full_skip=params.get("full_skip"))
     #pp_model = generalizing_endpoint_model.nn(full_skip= g_params.get("full_skip"))
-    pp_model = conv1x1_endpoint_in_model.nn(full_skip= params.get("full_skip"),params=params)
-    #pp_model = pathnorm_endpoint_model.nn(full_skip= params.get("full_skip"),params=params)
+    #pp_model = conv1x1_endpoint_in_model.nn(full_skip= params.get("full_skip"),params=params)
+
+    #strategy = tf.distribute.MirroredStrategy()
+    #print(f'Number of replicas in sync {strategy.num_replicas_in_sync}')
+
+    #with strategy.scope():
+        #pp_model = LSTMconv1x1_endpoint_in_model.nn(full_skip= params.get("full_skip"),params=params)
+    pp_model = coordconv1x1_endpoint_in_model.nn(full_skip= params.get("full_skip"),params=params)
 
     opt = _get_optimizer(params.get("optimizer"), lr=params.get("lr"))
     pp_model.compile(
@@ -372,10 +382,13 @@ if __name__ == "__main__":
         loss=params.get("losses"),
         loss_weights=params.get("loss_weights"), metrics=params.get("metric")
     )
+        
     # Learning rate scheduler
     cb_reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(
-        monitor="val_loss", factor=0.2, patience=4, min_lr=0.0001
+        monitor="val_loss", factor=0.2, patience=6, min_lr=0.0001
     )
+
+    #tensorboardcallback = tf.keras.callbacks.TensorBoard(log_dir=params.get("log_dir"),profile_batch=2)
 
     # Model training
     history = pp_model.fit(
@@ -385,7 +398,7 @@ if __name__ == "__main__":
         callbacks=[
             cb_reduce_lr,
             #WandbCallback(),
-            cd_wand_custom(ds_test=ds_test, np_test_dataset=np_ds_test,test_index=15,normalized_coords=params.get("normalize_coords")),
+            cd_wand_custom(ds_test=ds_test, np_test_dataset=np_ds_test,test_index=40,normalized_coords=params.get("normalize_coords"))
         ],
     )
 

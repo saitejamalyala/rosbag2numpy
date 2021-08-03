@@ -9,12 +9,16 @@ def euclidean_distance_loss(y_true, y_pred):
     :return: float
     """
     #original euclidean distance loss =  K.sqrt(K.sum(K.square(y_pred - y_true), axis=-1))
-    #loss = K.mean(K.sqrt(K.sum(K.square(y_pred - y_true), axis=-1)))
-    loss =  K.sqrt(K.sum(K.square(y_pred - y_true), axis=-1))
+    loss = K.mean(K.sqrt(K.sum(K.square(y_pred - y_true), axis=-1)))
+    #loss =  K.sqrt(K.sum(K.square(y_pred - y_true), axis=-1))
 
     return loss
 
-def endpoint_loss(y_true, y_pred):
+def endpoint_loss(y_true, y_pred): # or final displacement error
     loss = K.sqrt(K.sum(K.square(y_pred[-1,:] - y_true[-1,:])))
     
     return loss
+
+
+#code to train a neural network to predict the next point in a trajectory in tensorflow
+
