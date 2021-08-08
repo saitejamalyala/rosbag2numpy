@@ -195,8 +195,8 @@ class cd_wand_custom(WandbCallback):
         if self.normalized_coords:
             # ax=fig.add_subplot(1,1,1)
             plt.plot(
-                left_bnd[:, 0]/self.normalize_factor,
-                left_bnd[:, 1]/self.normalize_factor,
+                left_bnd[:, 0]*self.normalize_factor,
+                left_bnd[:, 1]*self.normalize_factor,
                 "-.",
                 color="magenta",
                 markersize=0.5,
@@ -204,16 +204,16 @@ class cd_wand_custom(WandbCallback):
             )
 
             plt.plot(
-                init_path[:, 0]/self.normalize_factor,
-                init_path[:, 1]/self.normalize_factor,
+                init_path[:, 0]*self.normalize_factor,
+                init_path[:, 1]*self.normalize_factor,
                 "o-",
                 color="lawngreen",
                 markersize=1,
                 linewidth=1,
             )
             plt.plot(
-                opt_path[:, 0]/self.normalize_factor,
-                opt_path[:, 1]/self.normalize_factor,
+                opt_path[:, 0]*self.normalize_factor,
+                opt_path[:, 1]*self.normalize_factor,
                 "--",
                 color="yellow",
                 markersize=1,
@@ -221,8 +221,8 @@ class cd_wand_custom(WandbCallback):
             )
 
             plt.plot(
-                predict_path[:, 0]/self.normalize_factor,
-                predict_path[:, 1]/self.normalize_factor,
+                predict_path[:, 0]*self.normalize_factor,
+                predict_path[:, 1]*self.normalize_factor,
                 "--",
                 color="orange",
                 markersize=1,
@@ -230,8 +230,8 @@ class cd_wand_custom(WandbCallback):
             )
 
             plt.plot(
-                right_bnd[:, 0]/self.normalize_factor,
-                right_bnd[:, 1]/self.normalize_factor,
+                right_bnd[:, 0]*self.normalize_factor,
+                right_bnd[:, 1]*self.normalize_factor,
                 "-.",
                 color="magenta",
                 markersize=0.5,
@@ -239,8 +239,8 @@ class cd_wand_custom(WandbCallback):
             )
 
             plt.plot(
-                car_odo[0]/self.normalize_factor,
-                car_odo[1]/self.normalize_factor,
+                car_odo[0]*self.normalize_factor,
+                car_odo[1]*self.normalize_factor,
                 "r*",
                 color="red",
                 markersize=8,
@@ -354,8 +354,9 @@ if __name__ == "__main__":
     ds_loader = dataset_loader(
         tfrec_dir=params.get("dataset_dir"),
         batch_size=params.get("H_BATCH_SIZE"),
-        shuffle_buffer=params["H_SHUFFLE_BUFFER"],
-        normalize_coords=params["normalize_coords"],
+        shuffle_buffer=params.get("H_SHUFFLE_BUFFER"),
+        normalize_coords=params.get("normalize_coords"),
+        normalize_factor=params.get("normalize_factor")
     )
 
     #ds_train, ds_valid, ds_test = ds_loader.build_dataset()
@@ -367,14 +368,14 @@ if __name__ == "__main__":
     #pp_model = base_model.nn()
     #pp_model = endpoint_in_model.nn(full_skip=params.get("full_skip"))
     #pp_model = generalizing_endpoint_model.nn(full_skip= g_params.get("full_skip"))
-    #pp_model = conv1x1_endpoint_in_model.nn(full_skip= params.get("full_skip"),params=params)
+    pp_model = conv1x1_endpoint_in_model.nn(full_skip= params.get("full_skip"),params=params)
 
     #strategy = tf.distribute.MirroredStrategy()
     #print(f'Number of replicas in sync {strategy.num_replicas_in_sync}')
 
     #with strategy.scope():
         #pp_model = LSTMconv1x1_endpoint_in_model.nn(full_skip= params.get("full_skip"),params=params)
-    pp_model = coordconv1x1_endpoint_in_model.nn(full_skip= params.get("full_skip"),params=params)
+    #pp_model = coordconv1x1_endpoint_in_model.nn(full_skip= params.get("full_skip"),params=params)
 
     opt = _get_optimizer(params.get("optimizer"), lr=params.get("lr"))
     pp_model.compile(
@@ -398,7 +399,13 @@ if __name__ == "__main__":
         callbacks=[
             cb_reduce_lr,
             #WandbCallback(),
-            cd_wand_custom(ds_test=ds_test, np_test_dataset=np_ds_test,test_index=40,normalized_coords=params.get("normalize_coords"))
+            cd_wand_custom(ds_test=ds_test, 
+            np_test_dataset=np_ds_test,
+            test_index=40,
+            normalized_coords=params.get("normalize_coords"),
+            normalize_factor = params.get("normalize_factor")
+            
+            )
         ],
     )
 

@@ -64,7 +64,7 @@ class dataset_loader:
         # order important
         
         if self.normalize_coords==True:
-            nf = tf.constant(self.normalize_factor,dtype=tf.float32,name="normalization factor")
+            nf = tf.constant(self.normalize_factor,dtype=tf.float32,name="normalization_factor")
             example["left_bnd"] = ((example["left_bnd"]-example["grid_org_res"][:2])/example["grid_org_res"][2])/nf
             example["right_bnd"] = ((example["right_bnd"]-example["grid_org_res"][:2])/example["grid_org_res"][2])/nf
             example["init_path"] =((example["init_path"]-example["grid_org_res"][:2])/example["grid_org_res"][2])/nf

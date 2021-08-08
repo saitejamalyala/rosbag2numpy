@@ -8,6 +8,7 @@ params = {
     "H_BATCH_SIZE" :32,
     "H_SHUFFLE_BUFFER" : 32*100,
     "normalize_coords": True,
+    "normalize_factor": 1536,
     #"dataset_dir":'/netpool/work/gpu-3/users/malyalasa/New_folder/tf_records',
     "dataset_dir":'/bigpool/projects/yao_SCANGAN360/New_Folder/tf_records',
     #------------ Model Hyper paramaters ----------#
