@@ -1,5 +1,5 @@
 import numpy as np
-from numpy.core.numeric import array_equiv
+from numpy.core.numeric import NaN, array_equiv
 import tensorflow as tf
 from typing import List, Dict, Tuple, Type
 from numpy import ndarray
@@ -14,7 +14,7 @@ import numpy as np
 print(tf.__version__)
 
 # Logging setup
-logging.basicConfig(filename="nzp2tfrec-zeros_check.log", filemode="a", level=logging.INFO)
+logging.basicConfig(filename="nzp2tfrec-zeros_check_costmap.log", filemode="a", level=logging.INFO)
 logger = logging.getLogger(__name__)
 logger.setLevel(level=logging.INFO)
 ch = logging.StreamHandler()
@@ -193,7 +193,7 @@ class Tfrecs_frm_npz:
         """
         def gridmap_feature(value):
             """Returns a bytes_list from a string / byte."""
-            value = calc_costmap(griddata=value,ododata=car_odo,initial_path=init_path)
+            value = calc_costmap(gridmap=value,gd_org_res=grid_org_res,car_odo=car_odo,initial_path=init_path)
 
             return tf.train.Feature(
                 bytes_list=tf.train.BytesList(value=[value.tostring()])
@@ -219,7 +219,7 @@ class Tfrecs_frm_npz:
 
             return direction_cost
 
-        def calc_costmap(gridmap:ndarray,car_odo:ndarray,initial_path:ndarray,include_dir_cost:bool=True,distance_mag:float=0.23)->ndarray:
+        def calc_costmap(gridmap:ndarray,gd_org_res:ndarray,car_odo:ndarray,initial_path:ndarray,include_dir_cost:bool=True,distance_mag:float=0.23)->ndarray:
             """Function to transfor grid map to cost map
 
             Args:
@@ -234,6 +234,10 @@ class Tfrecs_frm_npz:
             
             car_coords = car_odo[0:2]
             end_coords = initial_path[-1]
+            
+            # Normalize coordinates to 0-1536 range
+            car_coords = (car_coords-gd_org_res[0:2])/gd_org_res[2]
+            end_coords = (end_coords-gd_org_res[0:2])/gd_org_res[2]
 
             # Initialize distance and direction costmap 
             dist_costmap = np.zeros(shape=(1536,1536))
@@ -278,8 +282,9 @@ class Tfrecs_frm_npz:
 
             # normalize cost map between [0,1]
             costmap = costmap/np.max(costmap)
-
-            return costmap
+            #cp=r'C:\Users\Teja\Documents\_INFOTECH\Thesis\sample_Ros_bag\npzcostmaps'
+            #np.savez_compressed(os.path.join(cp,file_details.decode("utf-8").split('/')[-1]),grid_data=costmap.astype(np.float16))
+            return costmap.astype(np.float16)
 
         feature = {
             # model inputs
@@ -352,7 +357,8 @@ class Tfrecs_frm_npz:
                     elif np.array_equiv(right_bnd[s],np.zeros_like(right_bnd[s])):
                         logger.info(f"Files with zeros: {scene_name}/{folder_name}/{file_name}")
                     else :
-                        logger.info(f"Grid_org_res:{grid_org_res[s]} in {scene_name}/{folder_name}/{file_name}")
+                        #logger.info(f"Grid_org_res:{grid_org_res[s]} in {scene_name}/{folder_name}/{file_name}")
+                        pass
 
                     example = self.__create_example(
                         grid_map=grid_map[s],
@@ -379,7 +385,7 @@ class Tfrecs_frm_npz:
 
         # logger.info(len(all_grid_paths),len(all_init_paths),len(all_opt_paths),len(all_lr_bnd_paths),len(all_odo_paths))
 
-        for i in trange(len(all_grid_paths[0:1])):
+        for i in trange(len(all_grid_paths)):
             # load inputs
             in_grid_map = self.__load_npz(
                 file_path=all_grid_paths[i],
@@ -433,7 +439,7 @@ class Tfrecs_frm_npz:
 
 
 s_path = r"D:\npz_files"
-tgt_path = r"D:\tf_records"
+tgt_path = r"D:\tf_records_w_costmap_dist_dir"#r"D:\testingcostmap"#
 
 tf_rec_maker = Tfrecs_frm_npz(
     source_path=s_path, target_path=tgt_path, samples_per_record=16
