@@ -280,7 +280,8 @@ class Tfrecs_frm_npz:
                     elif np.array_equiv(right_bnd[s],np.zeros_like(right_bnd[s])):
                         logger.info(f"Files with zeros: {scene_name}/{folder_name}/{file_name}")
                     else :
-                        logger.info(f"Grid_org_res:{grid_org_res[s]} in {scene_name}/{folder_name}/{file_name}")
+                        #logger.info(f"Grid_org_res:{grid_org_res[s]} in {scene_name}/{folder_name}/{file_name}")
+                        pass
 
                     example = self.__create_example(
                         grid_map=grid_map[s],
