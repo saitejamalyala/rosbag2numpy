@@ -133,4 +133,6 @@ dmypy.json
 *.tflite
 test_results/all_testset_results
 test_results/sorted
+test_results/*
 logging/
+models/coord1.py
