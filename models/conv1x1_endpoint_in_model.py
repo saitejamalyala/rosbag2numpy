@@ -4,11 +4,30 @@ from tensorflow.keras import models
 import tensorflow as tf
 from tensorflow.keras.regularizers import l1,l1_l2,l2
 from tensorflow.python.keras.regularizers import L1
-
-from ..config import params
+from rosbag2numpy.config import params
+from rosbag2numpy.losses import costmap_loss_wrapper,endpoint_loss,euclidean_distance_loss
+#from ..config import params
 import os
-print(tf.__version__)
-os.environ['CUDA_VISIBLE_DEVICES']="3"
+#print(tf.__version__)
+#os.environ['CUDA_VISIBLE_DEVICES']="3"
+
+def _get_optimizer(opt_name: str = "nadam", lr: float = 0.02):
+    if opt_name == "adam":
+        return tf.keras.optimizers.Adam(learning_rate=lr)
+    elif opt_name == "sgd":
+        return tf.keras.optimizers.SGD(learning_rate=lr)
+    elif opt_name == "rmsprop":
+        return tf.keras.optimizers.RMSprop(learning_rate=lr)
+    elif opt_name == "adagrad":
+        return tf.keras.optimizers.Adagrad(learning_rate=lr)
+    elif opt_name == "adadelta":
+        return tf.keras.optimizers.Adadelta(learning_rate=lr)
+    elif opt_name == "adamax":
+        return tf.keras.optimizers.Adamax(learning_rate=lr)
+    elif opt_name == "nadam":
+        return tf.keras.optimizers.Nadam(learning_rate=lr)
+    else:
+        return tf.keras.optimizers.Nadam(learning_rate=lr)
 
 #@tf.keras.utils.register_keras_serializable()
 class CustomMaskLayer(layers.Layer):
@@ -100,7 +119,7 @@ def nn(full_skip=False,params=None):
     
     # Block 1
     
-    x_A = layers.Conv2D(16,kernel_size=3,strides=2)(ip_gridmap)
+    x_A = layers.Conv2D(32,kernel_size=5,strides=2)(ip_gridmap)
     x_A = layers.LeakyReLU()(x_A)
     x_A = layers.BatchNormalization()(x_A)
     x_A = layers.AvgPool2D(pool_size=(4,4))(x_A)
@@ -108,19 +127,19 @@ def nn(full_skip=False,params=None):
     
     # Block 2
     
-    x_A = layers.Conv2D(32,kernel_size=3,strides=1)(x_A)
+    x_A = layers.Conv2D(64,kernel_size=3,strides=1)(x_A)
     x_A = layers.LeakyReLU()(x_A)
     x_A = layers.BatchNormalization()(x_A)
-    #x_A = layers.AvgPool2D(pool_size=(2,2))(x_A)
+    x_A = layers.AvgPool2D(pool_size=(2,2))(x_A)
     
     # 1x1 blocks
-    """
-        x_A = layers.Conv2D(16,kernel_size=1,strides=1)(x_A)
-        x_A = layers.ReLU()(x_A)
-        x_A = layers.BatchNormalization()(x_A)
-    """
-    x_A = layers.Conv2D(8,kernel_size=1,strides=1)(x_A)
+    
+    x_A = layers.Conv2D(128,kernel_size=3,strides=1)(x_A)
+    x_A = layers.ReLU()(x_A)
+    x_A = layers.BatchNormalization()(x_A)
 
+    x_A = layers.Conv2D(16,kernel_size=1,strides=1)(x_A)
+    x_A = layers.Conv2D(8,kernel_size=1,strides=1)(x_A)
     x_A = layers.Conv2D(2,kernel_size=1,strides=1)(x_A)
 
 
@@ -157,36 +176,35 @@ def nn(full_skip=False,params=None):
 
     # Dense Network
     # Block 4
-    output = layers.Dense(16, activation='linear')(concat_feat)
+    output = layers.Dense(16, activation='relu')(concat_feat)
     output = layers.BatchNormalization()(output)
     #output = layers.ReLU()(output)
     output = layers.Dropout(params.get("drop_rate")["dense_rate1"])(output)
     
     # Block 5
     """
-    output = layers.Dense(32, activation='linear')(output)
-    output = layers.BatchNormalization()(output)
-    output = layers.ReLU()(output)
+        output = layers.Dense(32, activation='linear')(output)
+        output = layers.BatchNormalization()(output)
+        output = layers.ReLU()(output)
     """
     #output = layers.Dropout(params["drop_rate"]["dense_rate2"])(output)
     
     # Block 5
     """
-    output = layers.Dense(64, activation='linear')(output)
-    output = layers.BatchNormalization()(output)
-    output = layers.ReLU()(output)
+        output = layers.Dense(64, activation='linear')(output)
+        output = layers.BatchNormalization()(output)
+        output = layers.ReLU()(output)
     """
     #output = layers.Dropout(params["drop_rate"]["dense_rate3"])(output)
 
-    
     # Block 5
-    output = layers.Dense(50, activation='linear',kernel_regularizer=l1(0.01))(output)
+    output = layers.Dense(50, activation='relu',kernel_regularizer=l1(0.01))(output)
     output = layers.Dropout(params.get("drop_rate")["dense_rate2"])(output)
 
     if full_skip:
         # Block 6-fs
         output = layers.add([output,reshape_init_path])
-        output = layers.Dense(50, activation='linear')(output)
+        output = layers.Dense(50, activation=params.get("lastlayer_activation"))(output)
 
     else:
         """
@@ -200,7 +218,7 @@ def nn(full_skip=False,params=None):
             first_last_skip_conn= CustomMaskLayer()(ip_init_path)
             reshape_first_last_skip = layers.Reshape((50,))(first_last_skip_conn)
             output = layers.add([output, reshape_first_last_skip])
-            output = layers.Dense(50, activation='linear')(output)
+            output = layers.Dense(50, activation=params.get("lastlayer_activation"))(output)
 
         # only first point skip connection(use full_skip=none)  
         else:   
@@ -209,19 +227,31 @@ def nn(full_skip=False,params=None):
             first_last_skip_conn = tf.math.multiply(first_last_skip_conn,ip_init_path)
             reshape_first_last_skip = layers.Reshape((50,))(first_last_skip_conn)
             output = layers.add([output, reshape_first_last_skip])
-            output = layers.Dense(50, activation='linear')(output)
+            output = layers.Dense(50, activation='relu')(output)
     
 
     #output
     output = layers.Reshape((25,2))(output)
     
     nn_fun = models.Model(inputs = [ip_gridmap,ip_grid_org_res,ip_left_bnd, ip_right_bnd, ip_car_odo, ip_init_path], outputs= output)
+    
+    #opt = tf.keras.optimizers.Adam(learning_rate=params.get("lr"))
+    #opt = tf.keras.optimizers.Nadam(learning_rate=params.get("lr"))
+    #_get_optimizer(params.get("optimizer"), lr=params.get("lr"))
+    """
+    nn_fun.compile(
+        optimizer=_get_optimizer(params.get("optimizer"), lr=params.get("lr")),
+        loss=[euclidean_distance_loss,endpoint_loss],#[costmap_loss_wrapper(ip_gridmap)],#[euclidean_distance_loss,endpoint_loss,costmap_loss_wrapper(ip_gridmap)],
+        loss_weights=params.get("loss_weights"), metrics=params.get("metric")
+    )
+    """
 
     nn_fun.summary(line_length=120)
+    #print(f'Losses:{nn_fun.loss},Loss weights : {params.get("loss_weights")}')
     
     return nn_fun
 
-nn(full_skip=False,params=params)
+#nn(full_skip=False,params=params)
 
 if '__name__'=='__main__':
    model=nn(full_skip=False)
