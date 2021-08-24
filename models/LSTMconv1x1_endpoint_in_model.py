@@ -142,6 +142,8 @@ def nn(full_skip=False,params=None):
     ip_right_bnd = layers.Input(shape=(25,2),name="Right_boundary")
     ip_car_odo = layers.Input(shape=(3,),name="Car_loc")
     ip_init_path = layers.Input(shape=(25,2),name="Initial_path")
+    ip_file_name = layers.Input(shape=(1,),name="File_name",dtype=tf.string)
+
     #ip_filedetais = layers.Input
 
     # branch 5
@@ -210,7 +212,7 @@ def nn(full_skip=False,params=None):
     #output
     output = layers.Reshape((25,2))(output)
     
-    nn_fun = models.Model(inputs = [ip_gridmap,ip_grid_org_res,ip_left_bnd, ip_right_bnd, ip_car_odo, ip_init_path], outputs= output)
+    nn_fun = models.Model(inputs = [ip_gridmap,ip_grid_org_res,ip_left_bnd, ip_right_bnd, ip_car_odo, ip_init_path, ip_file_name], outputs= output)
 
     nn_fun.summary(line_length=120)
     
