@@ -1,7 +1,8 @@
 import tensorflow as tf
 from glob import glob
 from typing import List, Tuple
-from .data_processing.data_loader import dataset_loader
+#from .data_processing.data_loader import dataset_loader
+from .data_processing.data_loader_costmap  import dataset_loader
 from matplotlib import pyplot as plt
 import numpy as np
 from numpy import ndarray
@@ -10,20 +11,13 @@ from .config import params
 from .config import generalization_model_params as g_params
 import wandb
 from wandb.keras import WandbCallback
-from .losses import euclidean_distance_loss,endpoint_loss
+from .losses import euclidean_distance_loss,endpoint_loss,costmap_loss_wrapper
 from .models import base_model,endpoint_in_model,generalizing_endpoint_model
 from .models import conv1x1_endpoint_in_model,coordconv1x1_endpoint_in_model, LSTMconv1x1_endpoint_in_model 
+import time
 import os
 print(tf.__version__)
-os.environ["CUDA_VISIBLE_DEVICES"] = "4,5,6"
-
-
-def _get_optimizer(opt_name: str = "adam", lr: float = 0.02):
-
-    if opt_name == "adam":
-        return tf.keras.optimizers.Adam(learning_rate=lr)
-    else:
-        return tf.keras.optimizers.RMSprop(learning_rate=lr)
+os.environ["CUDA_VISIBLE_DEVICES"] = "6,2,1"
 
 
 def _get_test_ds_size(ds_test) -> int:
@@ -66,8 +60,8 @@ def get_np_test_ds(ds_test) -> Dict[str, Union[ndarray, List]]:
     j = 0
     for input_batch, output_batch in ds_test:
 
-        for i in range(0, len(input_batch[0].numpy())):
-            np_tst_gridmap[j] = input_batch[0][i].numpy()
+        for i in range(len(input_batch[0].numpy())):
+            np_tst_gridmap[j] = input_batch[0][i].numpy().astype(np.float16)
             np_tst_grid_org_res[j] = input_batch[1][i].numpy()
             np_tst_left_bnd[j] = input_batch[2][i].numpy()
             np_tst_right_bnd[j] = input_batch[3][i].numpy()
@@ -223,7 +217,7 @@ class cd_wand_custom(WandbCallback):
             plt.plot(
                 predict_path[:, 0]*self.normalize_factor,
                 predict_path[:, 1]*self.normalize_factor,
-                "--",
+                "*-",
                 color="orange",
                 markersize=1,
                 linewidth=1,
@@ -315,13 +309,13 @@ class cd_wand_custom(WandbCallback):
         )
 
         plt.imshow(grid_map, origin="lower")
-
+        plt.colorbar()
         plt.title(f"{file_details}\nTest Index: {features['testidx']}")
         # save_fig_dir = '/netpool/work/gpu-3/users/malyalasa/New_folder/rosbag2numpy/test_results'
         # fig.savefig(f"{save_fig_dir}/Test_index_{features['testidx']}.jpg",format='jpg',dpi=300)
         # print(type(file_details))
         # cp_plt = plt
-        wandb.log({f"sample_img_{epoch-1}": plt})
+        wandb.log({f"sample_img_{epoch}": plt})
         plt.close()
 
         return plt
@@ -351,6 +345,8 @@ if __name__ == "__main__":
     wandb.init(project="ppmodel_base", config=params)
 
     # Load dataset
+    #normalize_coords==True implies, range is in 0-1536 (transformed to fit in grid)
+    # normalize_factor = True Implies 
     ds_loader = dataset_loader(
         tfrec_dir=params.get("dataset_dir"),
         batch_size=params.get("H_BATCH_SIZE"),
@@ -362,33 +358,36 @@ if __name__ == "__main__":
     #ds_train, ds_valid, ds_test = ds_loader.build_dataset()
     ds_train, ds_valid, ds_test = ds_loader.build_scenario_dataset(consider_scenes=10,no_train_scene=8,no_valid_scene=1,no_test_scene=1)
 
+    start = time.time()
     np_ds_test = get_np_test_ds(ds_test=ds_test)
-
+    print(f"Test dataset load time: {time.time() - start}")
     # Build and compile model
     #pp_model = base_model.nn()
     #pp_model = endpoint_in_model.nn(full_skip=params.get("full_skip"))
     #pp_model = generalizing_endpoint_model.nn(full_skip= g_params.get("full_skip"))
-    pp_model = conv1x1_endpoint_in_model.nn(full_skip= params.get("full_skip"),params=params)
+    #pp_model = conv1x1_endpoint_in_model.nn(full_skip= params.get("full_skip"),params=params)
 
     #strategy = tf.distribute.MirroredStrategy()
     #print(f'Number of replicas in sync {strategy.num_replicas_in_sync}')
 
     #with strategy.scope():
-        #pp_model = LSTMconv1x1_endpoint_in_model.nn(full_skip= params.get("full_skip"),params=params)
+    pp_model = LSTMconv1x1_endpoint_in_model.nn(full_skip= params.get("full_skip"),params=params)
     #pp_model = coordconv1x1_endpoint_in_model.nn(full_skip= params.get("full_skip"),params=params)
+    #pp_model = conv1x1_endpoint_in_model.nn(full_skip= params.get("full_skip"),params=params)
 
-    opt = _get_optimizer(params.get("optimizer"), lr=params.get("lr"))
+    
+    opt = conv1x1_endpoint_in_model._get_optimizer(params.get("optimizer"), lr=params.get("lr"))
     pp_model.compile(
         optimizer=opt, 
         loss=params.get("losses"),
         loss_weights=params.get("loss_weights"), metrics=params.get("metric")
     )
-        
+      
     # Learning rate scheduler
     cb_reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(
-        monitor="val_loss", factor=0.2, patience=6, min_lr=0.0001
+        monitor="val_loss", factor=0.2, patience=3, min_lr=0.0001
     )
-
+    
     #tensorboardcallback = tf.keras.callbacks.TensorBoard(log_dir=params.get("log_dir"),profile_batch=2)
 
     # Model training
@@ -397,16 +396,16 @@ if __name__ == "__main__":
         epochs=params.get("epochs"),
         validation_data=ds_valid,
         callbacks=[
-            cb_reduce_lr,
-            #WandbCallback(),
-            cd_wand_custom(ds_test=ds_test, 
-            np_test_dataset=np_ds_test,
-            test_index=40,
-            normalized_coords=params.get("normalize_coords"),
-            normalize_factor = params.get("normalize_factor")
-            
-            )
-        ],
+                cb_reduce_lr,
+                #WandbCallback(),
+                cd_wand_custom(ds_test=ds_test, 
+                np_test_dataset=np_ds_test,
+                test_index=40,
+                normalized_coords=params.get("normalize_coords"),
+                normalize_factor = params.get("normalize_factor")
+                
+                )
+            ],
     )
 
     #test_loss, test_accuracy = pp_model.evaluate(ds_test)
