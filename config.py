@@ -8,7 +8,8 @@ params = {
     "H_BATCH_SIZE" :32,
     "H_SHUFFLE_BUFFER" : 32*100,
     "normalize_coords": True,
-    "normalize_factor": 1.0,
+    "normalize_factor": 1536.0,
+    "lastlayer_activation":'sigmoid',
     #"dataset_dir":'/netpool/work/gpu-3/users/malyalasa/New_folder/tf_records',
     #"dataset_dir":'/bigpool/projects/yao_SCANGAN360/New_Folder/tf_records',
     "dataset_dir":'/bigpool/projects/yao_SCANGAN360/New_Folder/tf_records_w_costmap_dist_dir',
@@ -16,15 +17,15 @@ params = {
     "epochs":50,
     "lr":0.02,
     "optimizer":'nadam',
-    "metric":'accuracy',#MeanAbsoluteError(),
-    "losses":[euclidean_distance_loss,endpoint_loss],#Using directly during model compilation file, not used
-    "loss_weights":[1,1,1],
+    "metric":'mae',#MeanAbsoluteError(),
+    "losses":[euclidean_distance_loss],#Using directly during model compilation file, not used
+    "loss_weights":[1],
     #----------- directory paths -----------------#
     "log_dir": '/netpool/work/gpu-3/users/malyalasa/New_folder/rosbag2numpy/logging',
 
 
     #---------- Model params -----------#
-    "full_skip":False,
+    "full_skip":True,
     "drop_rate":{
         "dense_rate1":0.4,
         "dense_rate2":0.8,
