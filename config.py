@@ -3,7 +3,7 @@ from rosbag2numpy.losses import *
 
 params = {
     #"Description": "Costmaps (distance and direction),New data(only parking), coord conv, Normalized co-ordinates (paths, boundaries, ego/car odo, values range from 0-1536(grid min-grid max))",
-    "Description": "Testing new loss",
+    "Description": "retraining to check dense",
     #-------------- Data set Parameters ------------#
     "H_BATCH_SIZE" :32,
     "H_SHUFFLE_BUFFER" : 32*100,
@@ -16,7 +16,7 @@ params = {
     #------------ Model Hyper paramaters ----------#
     "epochs":50,
     "lr":0.02,
-    "optimizer":'nadam',
+    "optimizer": 'nadam', #'rmsprop',
     "metric":'mae',#MeanAbsoluteError(),
     "losses":[euclidean_distance_loss],#Using directly during model compilation file, not used
     "loss_weights":[1],

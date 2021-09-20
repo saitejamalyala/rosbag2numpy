@@ -71,7 +71,7 @@ class dataset_loader:
             example["opt_path"] = ((example["opt_path"]-example["grid_org_res"][:2])/example["grid_org_res"][2])/nf
 
             # we shouldnt normalize heading in ego position
-            car_odo_norm = (example["car_odo"][:2]-example["grid_org_res"][:2])/example["grid_org_res"][2]
+            car_odo_norm = ((example["car_odo"][:2]-example["grid_org_res"][:2])/example["grid_org_res"][2])/nf
             head = example["car_odo"][2]
             example["car_odo"] = tf.squeeze(tf.concat([tf.reshape(car_odo_norm,shape=(2,1)),tf.reshape(head,shape=(1,1))],axis=0))
 

@@ -13,11 +13,11 @@ import wandb
 from wandb.keras import WandbCallback
 from .losses import euclidean_distance_loss,endpoint_loss,costmap_loss_wrapper
 from .models import base_model,endpoint_in_model,generalizing_endpoint_model
-from .models import conv1x1_endpoint_in_model,coordconv1x1_endpoint_in_model, LSTMconv1x1_endpoint_in_model 
+from .models import conv1x1_endpoint_in_model,coordconv1x1_endpoint_in_model, LSTMconv1x1_endpoint_in_model, LSTMconv1x1_with_encoder 
 import time
 import os
 print(tf.__version__)
-os.environ["CUDA_VISIBLE_DEVICES"] = "6,2,1"
+os.environ["CUDA_VISIBLE_DEVICES"] = "3,2,6"
 
 
 def _get_test_ds_size(ds_test) -> int:
@@ -372,6 +372,7 @@ if __name__ == "__main__":
 
     #with strategy.scope():
     pp_model = LSTMconv1x1_endpoint_in_model.nn(full_skip= params.get("full_skip"),params=params)
+    #pp_model = LSTMconv1x1_with_encoder.nn(full_skip= params.get("full_skip"),params=params)
     #pp_model = coordconv1x1_endpoint_in_model.nn(full_skip= params.get("full_skip"),params=params)
     #pp_model = conv1x1_endpoint_in_model.nn(full_skip= params.get("full_skip"),params=params)
 

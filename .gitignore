@@ -136,3 +136,4 @@ test_results/sorted
 test_results/*
 logging/
 models/coord1.py
+wandb/

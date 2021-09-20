@@ -15,9 +15,27 @@ def euclidean_distance_loss(y_true, y_pred):
     
     loss =   K.mean(K.sqrt(K.sum(K.square(y_pred - y_true), axis=1)))
     loss = loss + K.mean(K.sqrt(K.sum(K.square(y_pred[-1,:] - y_true[-1,:]),axis=1)))
-    #loss += K.sqrt(K.sum(K.square(y_pred[0,:] - y_true[0,:]),axis=1))
+    loss += K.mean(K.sqrt(K.sum(K.square(y_pred[0,:] - y_true[0,:]),axis=1)))
 
     return loss
+
+def enc_costmap_loss(y_true, y_pred):
+    #prediction = y_pred[:,:,0:2]
+    print(y_pred.shape)
+    print(y_pred[:,25:,:].shape)
+    print(y_true.shape)
+
+    #enc_costmap = y_pred[:,2:]
+    #print(tf.shape(enc_costmap))
+    d_loss = 1.0#y_pred[:,:,0:2]-y_true
+    #d_loss =  K.mean(K.sqrt(K.sum(K.square(prediction - y_true), axis=1)))
+    #d_loss += K.mean(K.sqrt(K.sum(K.square(prediction[-1,:] - y_true[-1,:]), axis=1)))
+    #d_loss += K.mean(K.sqrt(K.sum(K.square(prediction[0,:] - y_true[0,:]),axis=1)))
+
+    #costmap_loss = K.sum(K.flatten(K.abs(enc_costmap*K.abs(prediction - y_true))))
+
+    return d_loss #+ costmap_loss
+
 
 def endpoint_loss(y_true, y_pred): # or final displacement error
     loss = K.mean(K.sqrt(K.sum(K.square(y_pred[-1,:] - y_true[-1,:]))))
@@ -127,30 +145,8 @@ def costmap_loss(y_true, y_pred):
 def loss_wrapper(cost_gt_opt):
 
     def pred_cost(y_true, y_pred):
-        #assuming y true is cost map 1536,1536
-        # y_pred is a list of predicted points 25,2
-        print(f"y_true:{y_true}")
-        print(f"y_pred:{y_pred}")
-        print(f"cost_gt_opt:{cost_gt_opt}")
-        costmap = y_true
-        valid_indices = tf.where(costmap > 0.35) # get indices
-        valid_costs = tf.gather_nd(costmap, valid_indices) # get respective values
-        valid_costs = tf.cast(valid_costs, dtype=tf.float32) #cast them to float32
-
-        allcosts = tf.constant(0.0)
-        valid_indices = tf.cast(valid_indices, dtype=tf.float32)
-        print(f"valid_costs:{valid_costs}")
-
-        for i in range(25):
-            #distance to all valid indices
-            #print(f"valid indices:{valid_indices[:,1:]}")
-            pred_dist  = K.sqrt(K.sum(K.square(valid_indices[:,1:] - y_pred[i]),axis=1))
-            inv_pred_dist = tf.math.reciprocal_no_nan(tf.math.pow(pred_dist,0.1))
-
-            # cost for one point in the path
-            cost_for_point = tf.reduce_sum(tf.multiply(inv_pred_dist,valid_costs))
-            pred_allcosts = tf.add(allcosts,cost_for_point) if i == 0 else tf.add(pred_allcosts,cost_for_point)
-        return K.mean(K.abs(pred_allcosts-cost_gt_opt))
+        
+        return K.sum(K.flatten(cost_gt_opt * K.abs(y_true - y_pred)))
     return pred_cost
         
 
