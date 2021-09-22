@@ -1,7 +1,7 @@
 from tensorflow.keras import layers
 from tensorflow.keras import models
 import tensorflow as tf
-from ..config import params
+from rosbag2numpy import config as params
 
 def TimeDistributedDense():
     ip_fv = layers.Input(shape=(25,1040))
@@ -30,4 +30,19 @@ def BidiLSTM():
 
     return nn_fun
 
-#BidiLSTM()
+def LSTMmodel():
+    ip_fv = layers.Input(shape=(25,1040))
+
+    x_A = layers.LSTM(units=5,return_sequences=True)(ip_fv)
+
+    x_A = layers.LSTM(units=50)(x_A)
+
+    x_A = layers.Reshape(target_shape=(25,2))(x_A)
+
+    nn_fun = models.Model(inputs = ip_fv, outputs= x_A)
+
+    nn_fun.summary()
+
+    return nn_fun
+
+

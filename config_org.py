@@ -34,13 +34,5 @@ params = {
 }
 
 
-generalization_model_params = {
-    "full_skip":None,
-    "drop_rate":{
-        "dense_rate1":0.5,
-        "dense_rate2":0.1,
-        "dense_rate3":0.1,
-    }
 
-}
 

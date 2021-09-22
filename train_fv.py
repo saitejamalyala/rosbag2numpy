@@ -1,6 +1,9 @@
 import os
-#import sys
-#sys.path.append("../")
+import sys
+sys.path.append("../")
+sys.path.append('./')
+sys.path.append('.././')
+
 import tensorflow as tf
 from glob import glob
 from typing import List
@@ -8,9 +11,9 @@ from matplotlib import pyplot as plt
 import numpy as np
 from numpy import ndarray
 from typing import Dict, List, Union
-from .config import params
-from .data_processing.data_loader_fv import dataset_loader
-from .models.fv_model import TimeDistributedDense,BidiLSTM
+from rosbag2numpy import config as params
+from rosbag2numpy.data_processing.data_loader_fv import dataset_loader
+from rosbag2numpy.models.fv_model import TimeDistributedDense,BidiLSTM,LSTMmodel
 import wandb
 from wandb.keras import WandbCallback
 import time
@@ -376,11 +379,10 @@ class cd_wand_custom(WandbCallback):
         wandb.log({"test_loss":test_loss,"test_accuracy":test_accuracy})
         return super().on_train_end(logs=logs)
 
-
 if __name__ =="__main__":
-    wandb.init(project="fv_model", config=params)
+    wandb.init(project="fv_model_sweep_test", config=params)
     ds_loader = dataset_loader(
-        tfrec_dir=params.get("dataset_dir"),
+        tfrec_dir=params.get("data_dir"),
         batch_size=params.get("H_BATCH_SIZE"),
         shuffle_buffer=params.get("H_SHUFFLE_BUFFER"),
         normalize_coords=params.get("normalize_coords"),
@@ -390,7 +392,7 @@ if __name__ =="__main__":
 
     np_test_ds_all = get_np_test_ds(ds_test=ds_test_all)
 
-    fv_model = TimeDistributedDense() #BidiLSTM()#TimeDistributedDense()
+    fv_model = TimeDistributedDense()#LSTMmodel() #BidiLSTM()#TimeDistributedDense()
  
     fv_model.compile(
         optimizer=_get_optimizer(opt_name=params.get("optimizer")), 
@@ -401,7 +403,8 @@ if __name__ =="__main__":
         monitor="val_loss", factor=0.2, patience=3, min_lr=0.0001
     )
 
-        # Model training
+    # Model training
+    print(f'config:{params}')
     history = fv_model.fit(ds_train,
         epochs=params.get("epochs"),
         validation_data=ds_valid,
