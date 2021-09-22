@@ -1,9 +1,8 @@
-#from tensorflow.keras.metrics import MeanAbsoluteError
 from rosbag2numpy.losses import *
 
 params = {
     #"Description": "Costmaps (distance and direction),New data(only parking), coord conv, Normalized co-ordinates (paths, boundaries, ego/car odo, values range from 0-1536(grid min-grid max))",
-    "Description": "retraining to check dense",
+    "Description": "feature vector model",
     #-------------- Data set Parameters ------------#
     "H_BATCH_SIZE" :32,
     "H_SHUFFLE_BUFFER" : 32*100,
@@ -12,19 +11,20 @@ params = {
     "lastlayer_activation":'sigmoid',
     #"dataset_dir":'/netpool/work/gpu-3/users/malyalasa/New_folder/tf_records',
     #"dataset_dir":'/bigpool/projects/yao_SCANGAN360/New_Folder/tf_records',
-    "dataset_dir":'/bigpool/projects/yao_SCANGAN360/New_Folder/tf_records_w_costmap_dist_dir',
+    "dataset_dir":'/bigpool/projects/yao_SCANGAN360/New_Folder/tf_records_w_cm_fv_diff_unequal',#'/bigpool/projects/yao_SCANGAN360/New_Folder/tf_records_w_cm_fv_diff',
     #------------ Model Hyper paramaters ----------#
-    "epochs":50,
+    "epochs":150,
     "lr":0.02,
     "optimizer": 'nadam', #'rmsprop',
-    "metric":'mae',#MeanAbsoluteError(),
-    "losses":[euclidean_distance_loss],#Using directly during model compilation file, not used
+    "metric":'mse',#MeanAbsoluteError(),
+    "losses":'mae',#Using directly during model compilation file, not used
     "loss_weights":[1],
     #----------- directory paths -----------------#
     "log_dir": '/netpool/work/gpu-3/users/malyalasa/New_folder/rosbag2numpy/logging',
 
 
     #---------- Model params -----------#
+    "layer_1_units":64,
     "full_skip":True,
     "drop_rate":{
         "dense_rate1":0.4,
@@ -34,13 +34,5 @@ params = {
 }
 
 
-generalization_model_params = {
-    "full_skip":None,
-    "drop_rate":{
-        "dense_rate1":0.5,
-        "dense_rate2":0.1,
-        "dense_rate3":0.1,
-    }
 
-}
 
