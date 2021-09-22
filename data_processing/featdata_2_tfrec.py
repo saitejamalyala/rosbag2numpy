@@ -32,7 +32,7 @@ class FvNpz_2_TfRec:
         self.num_samples = samples_per_record  # samples per record
 
         # file patterns to load data from
-        self.file_pattern = ['*_costmap_init_opt_diff_odo_fv.npz']
+        self.file_pattern = ['*cm_fv_paths_odo_unequal.npz']#['*_costmap_init_opt_diff_odo_fv.npz']
 
         pass
 
@@ -307,8 +307,9 @@ class FvNpz_2_TfRec:
 
 if __name__ == "__main__":
 
-    s_path = r"C:\Users\Teja\Documents\_INFOTECH\Thesis\sample_Ros_bag\np_data\raw_data_wo_img\scenario1"
-    tgt_path = r"D:\tf_records_w_cm_fv_diff"
+    s_path = r"C:\Users\Teja\Documents\_INFOTECH\Thesis\sample_Ros_bag\np_data\raw_data_wo_img"
+    tgt_path = r"D:\tf_records_w_cm_fv_diff_unequal"
+    #r"D:\tf_records_w_cm_fv_diff"
     #r"C:\Users\Teja\Documents\_INFOTECH\Thesis\sample_Ros_bag\np_data\tfrec_fv_costmap"
 
     tf_rec_maker = FvNpz_2_TfRec(

@@ -266,17 +266,18 @@ class FeatGen:
                 assert fv.shape[0]==tf_np_init_data.shape[0]
                 
                 # append eventually, Very inefficient way *** !!! correct it later !!!
-                cost_maps.append(total_cost_map)
-                init_paths.append(tf_np_init_data)
-                opt_paths.append(tf_np_opt_data)
-                diff_paths.append(tf_np_init_data-tf_np_opt_data)
-                car_odo_data.append(tf_np_odo_data)
-                list_features.append(fv)
+                if not np.allclose(tf_np_init_data,tf_np_opt_data):
+                    cost_maps.append(total_cost_map)
+                    init_paths.append(tf_np_init_data)
+                    opt_paths.append(tf_np_opt_data)
+                    diff_paths.append(tf_np_init_data-tf_np_opt_data)
+                    car_odo_data.append(tf_np_odo_data)
+                    list_features.append(fv)
 
 
-            assert len(init_paths)==len(opt_paths)==len(diff_paths)==len(car_odo_data)==np_grid_map.shape[0]
+            assert len(init_paths)==len(opt_paths)==len(diff_paths)==len(car_odo_data)==len(cost_maps)#np_grid_map.shape[0]
             
-            #print(len(init_paths))
+            print(f'post processing samples:{len(init_paths)}')
             ################ convert data to nd arrays to save in .npz #########################
 
             # costmap data range: 0.0-1.0 
@@ -296,7 +297,7 @@ class FeatGen:
 
             ############### save data in the same location as source path ##########################
             np.savez_compressed(
-                list_gridmap_loc[i].replace("_grid","_costmap_init_opt_diff_odo_fv_all"),
+                list_gridmap_loc[i].replace("_grid","cm_fv_paths_odo_unequal"),
                 costmap = arr_np_cost_map,
                 init_path = arr_np_init_path,
                 opt_path = arr_np_opt_path,
@@ -309,7 +310,7 @@ class FeatGen:
 
 if __name__ == "__main__":
 
-    source_path = r'C:\Users\Teja\Documents\_INFOTECH\Thesis\sample_Ros_bag\np_data\raw_data_wo_img\scenario1'
+    source_path = r'C:\Users\Teja\Documents\_INFOTECH\Thesis\sample_Ros_bag\np_data\raw_data_wo_img'
 
     feat = FeatGen(x_off=13,y_off=20, root_path=source_path)
 
@@ -317,13 +318,13 @@ if __name__ == "__main__":
     grid_paths = feat.get_all_grid_paths(print_path=True)
 
     # load data, get all corresponding data in that respective folder for every gridmap npz
-    test_grid_data,test_org_res,test_init_data,test_opt_data,test_odo_data = feat.load_np_data(grid_path=grid_paths[0])
+    #test_grid_data,test_org_res,test_init_data,test_opt_data,test_odo_data = feat.load_np_data(grid_path=grid_paths[0])
 
     # print to test shapes of loaded data
-    print(test_grid_data.shape,test_org_res.shape,test_init_data.shape,test_opt_data.shape,test_odo_data.shape)
+    #print(test_grid_data.shape,test_org_res.shape,test_init_data.shape,test_opt_data.shape,test_odo_data.shape)
 
     #check unequal indices functionality
-    print(f"Unequal Indices: {feat.check_imbalance(test_init_data,test_opt_data)}")
+    #print(f"Unequal Indices: {feat.check_imbalance(test_init_data,test_opt_data)}")
 
     #saves new npz files in the same location as source path
     feat.create_and_save_costmap_diff_featurevector(list_gridmap_loc=grid_paths)
