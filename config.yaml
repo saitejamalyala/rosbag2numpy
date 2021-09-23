@@ -1,18 +1,19 @@
 
 description: feature vector model with config yaml
-H_BATCH_SIZE : 32
+data_dir: /bigpool/projects/yao_SCANGAN360/New_Folder/tf_records_w_cm_fv_diff_unequal
+log_dir: /netpool/work/gpu-3/users/malyalasa/New_folder/rosbag2numpy/logging
+
+H_BATCH_SIZE : 8
 H_SHUFFLE_BUFFER : 3200
 normalize_coords: True
 normalize_factor: 1536.0
-data_dir: /bigpool/projects/yao_SCANGAN360/New_Folder/tf_records_w_cm_fv_diff_unequal
-epochs: 3
+epochs: 90
 lr: 0.02
-optimizer: nadam
+optimizer: rmsprop
 metric: mse
 losses: mae
 
 #model params
-layer_1_units: 64
-#model_type: TimeDistributedDense
+layer_1_units: 4
 
-log_dir: '/netpool/work/gpu-3/users/malyalasa/New_folder/rosbag2numpy/logging'
+#model_type: TimeDistributedDense
