@@ -255,11 +255,12 @@ class FeatGen:
                 tf_np_opt_data = self.transform_coord(np_opt_data[j],np_org_res[j])
                 tf_np_odo_data = self.transform_coord(np_odo_data[j][0:2],np_org_res[j])
 
-
+                
                 total_cost_map = self.calc_costmap(gridmap=np_grid_map[j]/127,gd_org_res=np_org_res[j],
                                         car_odo=tf_np_odo_data,initial_path=tf_np_init_data,
                                         include_dir_cost=True)
 
+                #total_cost_map = np_grid_map[j]/127 #(For binary gm), also change file extension name below. 
                 ###### Calculate feature vector from costmap and init_path ############
                 fv = self.get_feature_vector(gridmap=total_cost_map,init_path = tf_np_init_data,offset= [self.x_offset,self.y_offset])
 

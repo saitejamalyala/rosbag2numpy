@@ -6,7 +6,7 @@ def load_config(config_path):
     return config
 
 #print(os.getcwd())
-config = load_config('/netpool/work/gpu-3/users/malyalasa/New_folder/rosbag2numpy/config.yaml')
+config = load_config('config.yaml')
 
-#print(config)
+print(config)
 #sweep_config = load_config('sweep.yaml')
