@@ -13,7 +13,7 @@ from numpy import ndarray
 from typing import Dict, List, Union
 from rosbag2numpy import config as params
 from rosbag2numpy.data_processing.data_loader_fv import dataset_loader
-from rosbag2numpy.models.fv_model import TimeDistributedDense,BidiLSTM,LSTMmodel
+from rosbag2numpy.models.fv_model import TimeDistributedDense,BidiLSTM,LSTMmodel,hybridmodel
 import wandb
 from wandb.keras import WandbCallback
 import time
@@ -365,7 +365,7 @@ class cd_wand_custom(WandbCallback):
             loc="lower left",
         )
 
-        plt.imshow(cost_map.astype(float), origin="lower")
+        plt.imshow(cost_map.astype(float), origin="lower",cmap='jet')
         plt.colorbar()
         plt.title(f"{file_details}\nTest Index: {sample_data['testidx']}")
 
@@ -380,7 +380,7 @@ class cd_wand_custom(WandbCallback):
         return super().on_train_end(logs=logs)
 
 if __name__ =="__main__":
-    wandb.init(project="fv_model_sweep_test", config=params)
+    wandb.init(project="fv_model", config=params)
     ds_loader = dataset_loader(
         tfrec_dir=params.get("data_dir"),
         batch_size=params.get("H_BATCH_SIZE"),
@@ -392,7 +392,7 @@ if __name__ =="__main__":
 
     np_test_ds_all = get_np_test_ds(ds_test=ds_test_all)
 
-    fv_model = TimeDistributedDense()#LSTMmodel() #BidiLSTM()#TimeDistributedDense()
+    fv_model = TimeDistributedDense()#hybridmodel()#LSTMmodel() #BidiLSTM()#TimeDistributedDense()
  
     fv_model.compile(
         optimizer=_get_optimizer(opt_name=params.get("optimizer")), 
@@ -402,6 +402,8 @@ if __name__ =="__main__":
     cb_reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(
         monitor="val_loss", factor=0.2, patience=3, min_lr=0.0001
     )
+
+    cb_early_stop = tf.keras.callbacks.EarlyStopping(monitor='val_loss',patience=7)
 
     # Model training
     print(f'config:{params}')
