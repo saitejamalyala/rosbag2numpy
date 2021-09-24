@@ -13,7 +13,7 @@ from numpy import ndarray
 from typing import Dict, List, Union
 from rosbag2numpy import config as params
 from rosbag2numpy.data_processing.data_loader_fv import dataset_loader
-from rosbag2numpy.models.fv_model import TimeDistributedDense,BidiLSTM,LSTMmodel,hybridmodel
+from rosbag2numpy.models import fv_model
 import wandb
 from wandb.keras import WandbCallback
 import time
@@ -120,6 +120,23 @@ def _get_optimizer(opt_name: str = "nadam", lr: float = 0.02):
         return tf.keras.optimizers.Nadam(learning_rate=lr)
     else:
         return tf.keras.optimizers.Nadam(learning_rate=lr)
+
+def get_model(params):
+    #TimeDistributedDense,BidiLSTM,LSTMmodel,hybridmodel
+    try:
+        assert "model_name" in params
+        if params.get('model_name')=='TimeDistributedDense':
+            return fv_model.TimeDistributedDense(params)
+        elif params.get('model_name')=='LSTMmodel':
+            return fv_model.LSTMmodel(params)
+        elif params.get('model_name')=='hybridmodel':
+            return fv_model.hybridmodel(params)
+        elif params.get('model_name')=='BidiLSTM':
+            return fv_model.BidiLSTM()
+        else:
+            return fv_model.hybridmodel(params)
+    except AssertionError as err:
+        print("model_name key doesnt exists in config")
 
 class cd_wand_custom(WandbCallback):
     def __init__(
@@ -380,7 +397,8 @@ class cd_wand_custom(WandbCallback):
         return super().on_train_end(logs=logs)
 
 if __name__ =="__main__":
-    wandb.init(project="fv_model", config=params)
+    wandb.init(project="fv_model_sweep_check", config=params)
+    #params = wandb.config
     ds_loader = dataset_loader(
         tfrec_dir=params.get("data_dir"),
         batch_size=params.get("H_BATCH_SIZE"),
@@ -392,7 +410,8 @@ if __name__ =="__main__":
 
     np_test_ds_all = get_np_test_ds(ds_test=ds_test_all)
 
-    fv_model = TimeDistributedDense()#hybridmodel()#LSTMmodel() #BidiLSTM()#TimeDistributedDense()
+    fv_model =  get_model(params)
+    #TimeDistributedDense(params)#hybridmodel()#LSTMmodel() #BidiLSTM()#TimeDistributedDense()
  
     fv_model.compile(
         optimizer=_get_optimizer(opt_name=params.get("optimizer")), 

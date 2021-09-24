@@ -1,0 +1,52 @@
+method: bayes
+metric:
+  goal: minimize
+  name: test_loss
+parameters:
+  H_SHUFFLE_BUFFER:
+    max: 6400
+    min: 1600
+    distribution: int_uniform
+  H_BATCH_SIZE:
+    max: 32
+    min: 8
+    distribution: int_uniform
+  optimizer:
+    values:
+      - nadam
+      - rmsprop
+      - adam
+      - sgd
+    distribution: categorical
+  epochs:
+    max: 100
+    min: 25
+    distribution: int_uniform
+  lr:
+    max: 0.04
+    min: 0.01
+    distribution: uniform
+
+  model_name: 
+    values:
+      - TimeDistributedDense
+      - LSTMmodel
+      - hybridmodel
+    distribution: categorical
+
+  layer1_Dense_units: 
+    max: 64
+    min: 2
+    distribution: int_uniform
+  layer1_LSTM_units: 
+    max: 50
+    min: 2
+    distribution: int_uniform
+
+
+program: train_fv.py
+
+command:
+  - python
+  - ${program}
+
