@@ -2,7 +2,8 @@ from tensorflow.keras import layers
 from tensorflow.keras import models
 import tensorflow as tf
 import wandb
-#from rosbag2numpy import config as params
+from rosbag2numpy import SEED
+tf.random.set_seed(SEED)
 import sys
 sys.path.append("../")
 sys.path.append('./')

@@ -3,12 +3,12 @@ description: feature vector model with config yaml
 data_dir: /bigpool/projects/yao_SCANGAN360/New_Folder/tf_records_w_cm_fv_diff_unequal
 log_dir: /netpool/work/gpu-3/users/malyalasa/New_folder/rosbag2numpy/logging
 
-H_BATCH_SIZE : 15
-H_SHUFFLE_BUFFER : 3200
+H_BATCH_SIZE : 16
+H_SHUFFLE_BUFFER : 4000
 normalize_coords: True
 normalize_factor: 1536.0
-epochs: 90
-lr: 0.015
+epochs: 100
+lr: 0.025
 optimizer: nadam
 metric: mse
 losses: mae

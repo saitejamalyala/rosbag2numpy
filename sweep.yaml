@@ -14,9 +14,9 @@ parameters:
   optimizer:
     values:
       - nadam
-      - rmsprop
+      #- rmsprop
       - adam
-      - sgd
+      #- sgd
     distribution: categorical
   epochs:
     max: 100
@@ -27,19 +27,19 @@ parameters:
     min: 0.01
     distribution: uniform
 
-  model_name: 
-    values:
-      - TimeDistributedDense
-      - LSTMmodel
-      - hybridmodel
-    distribution: categorical
+  #model_name: 
+    #values:
+      #- TimeDistributedDense
+      #- LSTMmodel
+      #- hybridmodel
+    #distribution: categorical
 
-  layer1_Dense_units: 
-    max: 64
-    min: 2
-    distribution: int_uniform
+  #layer1_Dense_units: 
+  #  max: 64
+  #  min: 2
+  #  distribution: int_uniform
   layer1_LSTM_units: 
-    max: 50
+    max: 30
     min: 2
     distribution: int_uniform
 

@@ -12,14 +12,16 @@ import numpy as np
 from numpy import ndarray
 from typing import Dict, List, Union
 from rosbag2numpy import config as params
+from rosbag2numpy import SEED
 from rosbag2numpy.data_processing.data_loader_fv import dataset_loader
 from rosbag2numpy.models import fv_model
 import wandb
 from wandb.keras import WandbCallback
 import time
 import os
+tf.random.set_seed(SEED)
 os.environ["CUDA_VISIBLE_DEVICES"] = "3,2,6"
-
+from tensorflow.keras import losses
 print(tf.__version__)
 
 def _get_test_ds_size(ds_test) -> int:
@@ -398,7 +400,8 @@ class cd_wand_custom(WandbCallback):
 
 if __name__ =="__main__":
     wandb.init(project="fv_model_sweep_check", config=params)
-    #params = wandb.config
+    #print(f"wandb config:{wandb.config}")
+    params = wandb.config
     ds_loader = dataset_loader(
         tfrec_dir=params.get("data_dir"),
         batch_size=params.get("H_BATCH_SIZE"),
@@ -414,12 +417,12 @@ if __name__ =="__main__":
     #TimeDistributedDense(params)#hybridmodel()#LSTMmodel() #BidiLSTM()#TimeDistributedDense()
  
     fv_model.compile(
-        optimizer=_get_optimizer(opt_name=params.get("optimizer")), 
+        optimizer=_get_optimizer(opt_name=params.get("optimizer"),lr = params.get("lr")), 
         loss=params.get("losses"), metrics=params.get("metric"))
 
     # Learning rate scheduler
     cb_reduce_lr = tf.keras.callbacks.ReduceLROnPlateau(
-        monitor="val_loss", factor=0.2, patience=3, min_lr=0.0001
+        monitor="val_loss", factor=0.2, patience=5, min_lr=0.0001
     )
 
     cb_early_stop = tf.keras.callbacks.EarlyStopping(monitor='val_loss',patience=7)
