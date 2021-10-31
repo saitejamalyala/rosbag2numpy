@@ -5,7 +5,8 @@ import tensorflow as tf
 from tensorflow.keras.regularizers import l1,l1_l2,l2
 from tensorflow.python.keras.regularizers import L1
 from rosbag2numpy.models.coord import add_channels
-from rosbag2numpy.config import params
+from rosbag2numpy import config as params
+
 import os
 #print(tf.__version__)
 #os.environ['CUDA_VISIBLE_DEVICES']="3"

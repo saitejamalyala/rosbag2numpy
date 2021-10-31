@@ -1,5 +1,5 @@
 
-description: feature vector model with config yaml
+description: GRU based model included
 data_dir: /bigpool/projects/yao_SCANGAN360/New_Folder/tf_records_w_cm_fv_diff_unequal
 log_dir: /netpool/work/gpu-3/users/malyalasa/New_folder/rosbag2numpy/logging
 
@@ -7,18 +7,19 @@ H_BATCH_SIZE : 16
 H_SHUFFLE_BUFFER : 4000
 normalize_coords: True
 normalize_factor: 1536.0
-epochs: 100
-lr: 0.025
+epochs: 60
+lr: 0.01 #0.025
 optimizer: nadam
 metric: mse
 losses: mae
 
 #model params
-model_name: LSTMmodel
+model_name: GRUmodel
   #BidiLSTM
   #hybridmodel 
 #TimeDistributedDense
 layer1_Dense_units: 4
 layer1_LSTM_units: 2
+layer1_GRU_units: 2
 
 #model_type: TimeDistributedDense

@@ -124,13 +124,15 @@ def _get_optimizer(opt_name: str = "nadam", lr: float = 0.02):
         return tf.keras.optimizers.Nadam(learning_rate=lr)
 
 def get_model(params):
-    #TimeDistributedDense,BidiLSTM,LSTMmodel,hybridmodel
+    #TimeDistributedDense,BidiLSTM,LSTMmodel,GRU,hybridmodel
     try:
         assert "model_name" in params
         if params.get('model_name')=='TimeDistributedDense':
             return fv_model.TimeDistributedDense(params)
         elif params.get('model_name')=='LSTMmodel':
             return fv_model.LSTMmodel(params)
+        elif params.get('model_name')=='GRUmodel':
+            return fv_model.GRUmodel(params)
         elif params.get('model_name')=='hybridmodel':
             return fv_model.hybridmodel(params)
         elif params.get('model_name')=='BidiLSTM':

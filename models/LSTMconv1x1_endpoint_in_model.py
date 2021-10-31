@@ -6,7 +6,8 @@ from tensorflow.keras import models
 import tensorflow as tf
 from tensorflow.keras.regularizers import l1,l1_l2,l2
 from tensorflow.python.keras.regularizers import L1
-from rosbag2numpy.config import params
+#from rosbag2numpy.config import params
+from rosbag2numpy import config as params
 import os
 #print(tf.__version__)
 #from ..config import params
@@ -167,9 +168,9 @@ def nn(full_skip=False,params=None):
     if full_skip:
         # Block 6-fs
         output = layers.add([output,reshape_init_path])
-        #output = layers.Reshape(target_shape=(output.shape.concatenate(1).as_list()[1:]))(output)
-        #output = layers.LSTM(units=25,return_sequences=True)(output)
-        #output = layers.LSTM(units=50)(output)
+        output = layers.Reshape(target_shape=(output.shape.concatenate(1).as_list()[1:]))(output)
+        output = layers.LSTM(units=25,return_sequences=True)(output)
+        output = layers.LSTM(units=50)(output)
 
         output = layers.Dense(50, activation=params.get("lastlayer_activation"))(output)
 

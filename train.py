@@ -1,24 +1,45 @@
+import os
+import sys
+sys.path.append("../")
+sys.path.append('./')
+sys.path.append('.././')
 import tensorflow as tf
 from glob import glob
 from typing import List, Tuple
 #from .data_processing.data_loader import dataset_loader
-from .data_processing.data_loader_costmap  import dataset_loader
+from rosbag2numpy.data_processing.data_loader_costmap  import dataset_loader
 from matplotlib import pyplot as plt
 import numpy as np
 from numpy import ndarray
 from typing import Dict, List, Union
-from .config import params
-from .config import generalization_model_params as g_params
+from rosbag2numpy import config as params
 import wandb
 from wandb.keras import WandbCallback
-from .losses import euclidean_distance_loss,endpoint_loss,costmap_loss_wrapper
-from .models import base_model,endpoint_in_model,generalizing_endpoint_model
-from .models import conv1x1_endpoint_in_model,coordconv1x1_endpoint_in_model, LSTMconv1x1_endpoint_in_model, LSTMconv1x1_with_encoder 
+#from rosbag2numpy.models import base_model,endpoint_in_model,generalizing_endpoint_model
+#from rosbag2numpy.models import conv1x1_endpoint_in_model,coordconv1x1_endpoint_in_model, LSTMconv1x1_endpoint_in_model, LSTMconv1x1_with_encoder 
+from rosbag2numpy.models import LSTMconv1x1_endpoint_in_model
 import time
 import os
 print(tf.__version__)
-os.environ["CUDA_VISIBLE_DEVICES"] = "3,2,6"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
+def _get_optimizer(opt_name: str = "nadam", lr: float = 0.02):
+    if opt_name == "adam":
+        return tf.keras.optimizers.Adam(learning_rate=lr)
+    elif opt_name == "sgd":
+        return tf.keras.optimizers.SGD(learning_rate=lr)
+    elif opt_name == "rmsprop":
+        return tf.keras.optimizers.RMSprop(learning_rate=lr)
+    elif opt_name == "adagrad":
+        return tf.keras.optimizers.Adagrad(learning_rate=lr)
+    elif opt_name == "adadelta":
+        return tf.keras.optimizers.Adadelta(learning_rate=lr)
+    elif opt_name == "adamax":
+        return tf.keras.optimizers.Adamax(learning_rate=lr)
+    elif opt_name == "nadam":
+        return tf.keras.optimizers.Nadam(learning_rate=lr)
+    else:
+        return tf.keras.optimizers.Nadam(learning_rate=lr)
 
 def _get_test_ds_size(ds_test) -> int:
     """get the size of test dataset
@@ -348,7 +369,7 @@ if __name__ == "__main__":
     #normalize_coords==True implies, range is in 0-1536 (transformed to fit in grid)
     # normalize_factor = True Implies 
     ds_loader = dataset_loader(
-        tfrec_dir=params.get("dataset_dir"),
+        tfrec_dir='/bigpool/projects/yao_SCANGAN360/New_Folder/tf_records_w_costmap_dist_dir',#params.get("dataset_dir"),
         batch_size=params.get("H_BATCH_SIZE"),
         shuffle_buffer=params.get("H_SHUFFLE_BUFFER"),
         normalize_coords=params.get("normalize_coords"),
@@ -376,12 +397,12 @@ if __name__ == "__main__":
     #pp_model = coordconv1x1_endpoint_in_model.nn(full_skip= params.get("full_skip"),params=params)
     #pp_model = conv1x1_endpoint_in_model.nn(full_skip= params.get("full_skip"),params=params)
 
-    
-    opt = conv1x1_endpoint_in_model._get_optimizer(params.get("optimizer"), lr=params.get("lr"))
+      
+    opt = _get_optimizer(params.get("optimizer"), lr=params.get("lr"))
     pp_model.compile(
         optimizer=opt, 
         loss=params.get("losses"),
-        loss_weights=params.get("loss_weights"), metrics=params.get("metric")
+        metrics=params.get("metric")
     )
       
     # Learning rate scheduler
@@ -401,7 +422,7 @@ if __name__ == "__main__":
                 #WandbCallback(),
                 cd_wand_custom(ds_test=ds_test, 
                 np_test_dataset=np_ds_test,
-                test_index=40,
+                test_index=948,
                 normalized_coords=params.get("normalize_coords"),
                 normalize_factor = params.get("normalize_factor")
                 

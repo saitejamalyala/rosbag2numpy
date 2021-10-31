@@ -53,6 +53,21 @@ def LSTMmodel(params):
 
     return nn_fun
 
+def GRUmodel(params):
+    ip_fv = layers.Input(shape=(25,1040))
+
+    x_A = layers.GRU(units=params.get("layer1_LSTM_units"),return_sequences=True)(ip_fv)
+
+    x_A = layers.GRU(units=50)(x_A)
+
+    x_A = layers.Reshape(target_shape=(25,2))(x_A)
+
+    nn_fun = models.Model(inputs = ip_fv, outputs= x_A)
+
+    nn_fun.summary()
+
+    return nn_fun
+
 def hybridmodel(params):
     ip_fv = layers.Input(shape=(25,1040))
 

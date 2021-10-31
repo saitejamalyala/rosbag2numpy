@@ -4,7 +4,8 @@ from tensorflow.keras import models
 import tensorflow as tf
 from tensorflow.keras.regularizers import l1,l1_l2,l2
 from tensorflow.python.keras.regularizers import L1
-from rosbag2numpy.config import params
+#from rosbag2numpy.config import params
+from rosbag2numpy import config as params
 from rosbag2numpy.losses import costmap_loss_wrapper,endpoint_loss,euclidean_distance_loss
 #from ..config import params
 import os
